@@ -1,0 +1,48 @@
+Package: mMARCH.AC
+Version: 2.4.0.0
+Date: 2022-07-05
+Title: An Open-Source R/R-Markdown Package for Accelerometer Data Processing after Running GGIR    
+Authors@R: c(
+    person(given = "Wei", family = "Guo", 
+        role = c("aut", "cre"), email = "wei.guo3@nih.gov"), 
+    person(given = "Andrew", family = "Leroux", 
+        role = c("aut"), email = "andrew.leroux@cuanschutz.edu"), 
+    person(given = "Vadim", family = "Zipunnikov", 
+        role = c("aut"), email = "vzipunni@jhsph.edu"),  
+    person(given = "Kathleen", family = "Merikangas",  
+        role = c("aut"), email = "merikank@mail.nih.gov")           
+      )
+Maintainer: Wei Guo <wei.guo3@nih.gov>
+Description: Generate all necessary R/Rmd/shell files for data processing after running 'GGIR' (v2.4.0) for accelerometer data. In module 1, all csv files in the GGIR output directory were read, transformed and then merged. In module 2, the GGIR output files were checked and summarized in one excel sheet. In module 3, the merged data was cleaned according to the number of valid hours on each night and the number of valid days for each subject. In module 4, the cleaned activity data was imputed by the average Euclidean norm minus one (ENMO) over all the valid days for each subject. Finally, a comprehensive report of data processing was created using Rmarkdown, and the report includes few exploratory plots and multiple commonly used features extracted from minute level actigraphy data. 
+URL: https://github.com/WeiGuoNIMH/mMARCH_AC 
+BugReports: https://github.com/WeiGuoNIMH/mMARCH_AC/issues
+License: GPL-3
+Imports: 
+    refund,
+    denseFLMM,  
+    dplyr,
+    xlsx,
+    survival,
+    stats,
+    tidyr,
+    zoo, 
+    ineq,
+    cosinor, 
+    cosinor2,
+    abind, 
+    accelerometry, 
+    ActCR,
+    ActFrag,
+    minpack.lm,
+    kableExtra,
+    GGIR
+Depends:
+    R (>= 3.6.0) 
+Suggests:
+    knitr,
+    rmarkdown 
+Encoding: UTF-8 
+ByteCompile: true
+Type: Package
+VignetteBuilder: knitr 
+RoxygenNote: 7.2.0
