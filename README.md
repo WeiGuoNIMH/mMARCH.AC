@@ -1,11 +1,14 @@
 
 #######################################################################
+
 How to run mMARCH.AC?
+
 #######################################################################
 
 (1) create the template file in R 
  
 library(mMARCH.AC) 
+
 create.shell()
 
 (2) cat STUDYNAME_part0.maincall.R > Example_part0.maincall.R
