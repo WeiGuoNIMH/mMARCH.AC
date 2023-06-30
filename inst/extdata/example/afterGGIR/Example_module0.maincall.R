@@ -1,4 +1,6 @@
- 
+   
+
+options(width=2000) 
 argv = commandArgs(TRUE);  
 print(argv) 
 print(paste("length=",length(argv),sep=""))  
@@ -30,32 +32,36 @@ filename2id.2<-function(x) {
 mMARCH.AC.shell<-function(mode,filename2id=NULL){ 
 
 library(mMARCH.AC) 
-library(xlsx)
 packageVersion("mMARCH.AC")
 #  ?mMARCH.AC.maincall  # run help to see all argumengts 
 
 #########################################################################  
 # (user-define 2) Fill in parameters of your ggir output
 ########################################################################## 
+ 
+
+currentdir = "/data/guow4/project0/GGIR/postGGIR/postGGIR_compile/v2/example/afterGGIR"
+ 
+studyname = "Example"
+bindir = NULL  
+outputdir = "/data/guow4/project0/GGIR/postGGIR/postGGIR_compile/v2/example/GGIR/output_binfile"
+part5FN="WW_L50M125V500_T5A5"   
+QCdays.alpha = 0
+QChours.alpha = 3  
   
-currentdir = 
-studyname =
-bindir = 
-outputdir =  
 
 oldwd<-getwd()
 setwd(currentdir) 
 
 rmDup=FALSE   # keep all subjects in mMARCH.AC
-PA.threshold=c(40,100,400)
-PA.threshold2=c(50,100,400) 
-part5FN="WW_L50M100V400_T5A5" 
+PA.threshold=c(50,100,400)
+#part5FN="WW_L50M100V400_T5A5" 
 epochIn = 5
 epochOut =  60
 use.cluster = FALSE
 log.multiplier = 9250
-QCdays.alpha = 7
-QChours.alpha = 16 
+#QCdays.alpha = 7
+#QChours.alpha = 16 
 QCnights.feature.alpha = c(0,0,0,0)
 DoubleHour= "average" 
 QC.sleepdur.avg=NULL
@@ -116,7 +122,6 @@ mMARCH.AC.maincall(mode=mode,
           Rversion=Rversion,
           filename2id=filename2id,
           PA.threshold=PA.threshold,
-          PA.threshold2=PA.threshold2, 
           desiredtz=desiredtz,
           RemoveDaySleeper=RemoveDaySleeper,
           part5FN=part5FN,
@@ -139,3 +144,4 @@ setwd(oldwd)
 #        mode = 4 : impu
  
  
+

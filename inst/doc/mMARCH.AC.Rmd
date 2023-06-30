@@ -1,5 +1,5 @@
 ---
-title: "mMARCH.AC: An Open-Source R/R-Markdown Package for Accelerometer Data Processing after Running GGIR"
+title: "mMARCH.AC: An Open-Source R/R-Markdown Package for Processing of Accelerometry Data with GGIR in Motor Activity Research Consortium for Health (mMARCH) "
 author: "Wei Guo"
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 output: rmarkdown::html_vignette
@@ -35,7 +35,7 @@ library(knitr)
  
 ## Software Architecture
 
-The R package mMARCH.AC has been released with an open-source GPL-3 license on CRAN, and mMARCH.AC can run on Windows and Linux. Parallel computing in Linux is recommended due to the memory requirements associated with reading in multiple of the large data files. The package contains one primary function for users which, when run, generates all necessary R/R Markdown/shell executable files for data processing after running GGIR for accelerometer data; load, read, transform and merge long activity data;  examine and summarize GGIR outputs; clean the merged activity data according to the number of valid hours per night and the number of valid days per subject; activity data imputation by taking the average across the valid days for each subject; build a comprehensive report of data processing and exploratory plots; extract multiple commonly used features and study feature structure by the covariance decomposition. Figure 1 presents a flowchart for each step in this process which is described in greater detail below. The procedure, R functions, inputs, and outputs are all described in this package vignette. In addition, more documentation and example data could be found in mMARCH.AC repository on GitHub (URL: https://github.com/dora201888/mMARCH.AC).          
+The R package mMARCH.AC has been released with an open-source GPL-3 license on CRAN, and mMARCH.AC can run on Windows and Linux. Parallel computing in Linux is recommended due to the memory requirements associated with reading in multiple of the large data files. The package contains one primary function for users which, when run, generates all necessary R/R Markdown/shell executable files for data processing after running GGIR for accelerometer data; load, read, transform and merge long activity data;  examine and summarize GGIR outputs; clean the merged activity data according to the number of valid hours per night and the number of valid days per subject; activity data imputation by taking the average across the valid days for each subject; build a comprehensive report of data processing and exploratory plots; extract multiple commonly used features and study feature structure by the covariance decomposition. Figure 1 presents a flowchart for each step in this process which is described in greater detail below. The procedure, R functions, inputs, and outputs are all described in this package vignette. In addition, more documentation and example data could be found in mMARCH.AC repository on GitHub (URL: https://github.com/WeiGuoNIMH/mMARCH.AC).          
  
 
 
@@ -45,7 +45,7 @@ Mirroring the GGIR structure of processing individual data files in multiple par
 #
 **Figure 1: Overview of main steps and output in mMARCH.AC workflow.**
 ```{r pdfplot,  echo=F, out.width="700px", out.height="700px"}  
-include_graphics("figure1.workflow.pdf")  
+include_graphics("Figure1.workflow.pdf")  
 ``` 
 
 #
@@ -104,7 +104,7 @@ cat STUDYNAME_module0.maincall.R
 
 
 ```{r,eval=FALSE}
-options(width=2000) 
+ 
 argv = commandArgs(TRUE);  
 print(argv) 
 print(paste("length=",length(argv),sep=""))  
@@ -158,7 +158,7 @@ use.cluster = FALSE
 log.multiplier = 9250
 QCdays.alpha = 7
 QChours.alpha = 16 
-QCnights.feature.alpha = c(0,0)
+QCnights.feature.alpha = c(0,0,0,0)
 DoubleHour= "average" 
 QC.sleepdur.avg=NULL
 QC.nblocks.sleep.avg=NULL
@@ -644,7 +644,7 @@ module7d_weekend_studyname_new_features_page5_denseFLMM_subject_PCs.csv |	Functi
 **Sleep Domain**  
 
 
-```{r,echo=F}
+```{r s1,echo=F}
 library(xlsx)   
 library(knitr)  
 library(kableExtra)  
@@ -670,14 +670,14 @@ kable(dict.SL) %>%
 
 **Physical Activity Domain**      
  
-```{r,echo=F}
+```{r s2,echo=F}
 kable(dict.PA) %>%
      kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
 **Circadian Rhythmicity Domain**    
   
-```{r,echo=F}
+```{r s3,echo=F}
 kable(dict.CR) %>%
     kable_styling(bootstrap_options = c("striped", "hover"))
 ```
@@ -687,7 +687,7 @@ Note
      (2) The column of source indicates the feature source. R indiciates the feature was calculated based on activity data. Part2, part4 and part5 in 'Source' column indicate the feature was extracted from summary results from GGIR outputs.
 
 
-```{r,eval=FALSE,include=FALSE} 
+```{r s4,eval=FALSE,include=FALSE} 
 d1<-read.xlsx("mMARCH.AC.output.description.xlsx",sheetName="output.format")  
 
 cd /data/guow4/project0/GGIR/postGGIR/postGGIR_compile/v2/mMARCH.AC/vignettes     
@@ -696,7 +696,7 @@ R -e "rmarkdown::render('mMARCH.AC.Rmd'   )"
 
 
 # Citing mMARCH.AC  
-   +  Guo W., Leroux A., Shou S., Cui L., Kang S.,  Strippoli M.P., Preisig M., Zipunnikov V., Merikangas K. (2022) mMARCH.AC: An Open-Source R/R-Markdown Package for Accelerometer Data Processing after Running GGIR. (Manuscript)  
+   +  Guo W., Leroux A., Shou S., Cui L., Kang S.,  Strippoli M.P., Preisig M., Zipunnikov V., Merikangas K. (2022) Processing of accelerometry data with GGIR in Motor Activity Research Consortium for Health (mMARCH). (Manuscript)  
 
 
 
@@ -708,11 +708,14 @@ R -e "rmarkdown::render('mMARCH.AC.Rmd'   )"
    +  O'Connell M.J., Lock E.F. (2016). R.JIVE for exploration of multi-source molecular data. Bioinformatics, 32(18), 2877-2879.
 
 # Websites  
-   +  mMARCH.AC download: https://CRAN.R-project.org/package=mMARCH.AC 
 
-   +  mMARCH.AC vignette: https://cran.r-project.org/web/packages/mMARCH.AC/vignettes/mMARCH.AC.html
+   +  mMARCH.AC download: https://cran.r-project.org/package=mMARCH.AC  
 
-   +  Example data and documents: https://github.com/dora201888/mMARCH.AC
+   +  mMARCH.AC vignette: https://cran.r-project.org/package=mMARCH.AC
+
+   +  Example data and documents: https://github.com/WeiGuoNIMH/mMARCH.AC
  
 Please contact wei.guo3@nih.gov to ask questions.
+
+ 
  

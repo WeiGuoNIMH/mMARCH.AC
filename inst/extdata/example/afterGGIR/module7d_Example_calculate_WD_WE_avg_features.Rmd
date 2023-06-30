@@ -1,7 +1,7 @@
 ---
 title: 'mMARCH.AC module 7d: Extracts Weekends/Weekday Features of Domains of Physical Activity, Sleep and Circadian Rhythmicity '
 author: "Wei Guo"
-date_xxx
+date: "2022-09-20"
 output:
   html_document:
     df_print: paged
@@ -30,13 +30,14 @@ This R pargram extracts multiple commonly used features for weekday and weekends
 
 
 ```{r changeEveryStudy,include=FALSE  }
-currentdir_xxx 
-studyname_xxx 
-log.multiplier_xxx  
-RemoveDaySleeper_xxx 
-QCnights.feature.alpha_xxx  
-epochOut_xxx 
-holidayFN_xxx 
+currentdir="/data/guow4/project0/GGIR/postGGIR/postGGIR_compile/v2/example/afterGGIR"
+studyname="Example"
+log.multiplier=9250
+PA.threshold=c(50,100,400)
+RemoveDaySleeper=FALSE
+QCnights.feature.alpha=c(0,0,0,0)
+epochOut=60
+holidayFN=NULL
 epochOut<-epochOut
 
 
@@ -45,10 +46,10 @@ setwd(currentdir)
 ```
 
 ## Only modify subject-level features based on weekday and weekends    
-  +  amp_L_S	
-  +  acro_L_S	
+  +  amp_L	
+  +  acro_L	
   +  IS
-  +  PC1_S, PC2_S, ..., PC10_S	
+  +  PC1, PC2, ..., PC10	
  
 
 ## Parameters
@@ -130,11 +131,7 @@ library(kableExtra)
  
 
 # Prepare count/wear data for JIVE
-summaryFN1<-paste(currentdir,"/summary/",studyname,"_ggir_output_summary.xlsx",sep="")
-summaryP2<-read.xlsx( summaryFN1,head=0,sheetName = "2_fileSummary")  
-ggirV<-as.character(gsub("X","",summaryP2[1,1]))  
- 
-enmoFN<-paste("./data/impu.flag_All_",studyname,"_ENMO.data.", epochOut,"s.GGIR",ggirV,".csv",sep="")   
+enmoFN<-paste("./data/impu.flag_All_",studyname,"_ENMO.data.",epochOut,"s.csv",sep="")   
  
 
 # Prepare count/wear data for JIVE  (Note: Date=11/30/2017 format in D1)
@@ -204,7 +201,7 @@ B=A+1 #first column need to average
 ```
 
 
-## 2. Feature Extractions for those day features  
+## 2. Feature Extractions  
 * Circadian rhythmicity
     * functional PCA: `fpca.face (refund)` and ` denseFLMM` 
     * extended cosinor model with anti logistic transformed cosine curves: `ExtCos`, `ExtCos_long`
@@ -223,10 +220,10 @@ The classic cosinor model is defined as $r(t)= mes + amp \times c(t)$ where $c(t
 
 ```{r chunk24wd,results="hide"}  
 minuteW=(ncol(count.wd)-2)/1440
-Cos = ActCosinor_long2( count.data = count.wd, window=minuteW,daylevel=FALSE)  
-Cos.log = ActCosinor_long2( count.data = log.count.wd, window=minuteW,daylevel=FALSE)   
-extcos = ActExtendCosinor_long2(count.data = count.wd, window=minuteW,daylevel=FALSE) 
-extcos.log = ActExtendCosinor_long2(count.data = log.count.wd, window=minuteW,daylevel=FALSE)   
+Cos = ActCosinor_long2( count.data = count.wd, window=minuteW)  
+Cos.log = ActCosinor_long2( count.data = log.count.wd, window=minuteW)   
+extcos = ActExtendCosinor_long2(count.data = count.wd, window=minuteW)  
+extcos.log = ActExtendCosinor_long2(count.data = log.count.wd, window=minuteW)   
 colnames(Cos)<-c("ID","ndays","mesor","amp","acro","acrotime")
 colnames(Cos.log)<-c("ID","ndays","mesor_L","amp_L","acro_L","acrotime_L")
 colnames(extcos)<-gsub(paste("_",minuteW,sep=""),"_ext",colnames(extcos))
@@ -235,17 +232,17 @@ colnames(extcos.log)<-gsub(paste("_",minuteW,sep=""),"_ext_L",colnames(extcos.lo
 cosinormodel.1<-merge(Cos,Cos.log,by=c("ID","ndays"),all=TRUE) 
 cosinormodel.2<-merge(extcos,extcos.log,by=c("ID","ndays"),all=TRUE) 
 cosinormodel.wd<-merge(cosinormodel.1[,-2],cosinormodel.2[,-2],by="ID",all=TRUE)  
-colnames(cosinormodel.wd)[2:ncol(cosinormodel.wd)]<-paste(colnames(cosinormodel.wd)[2:ncol(cosinormodel.wd)],"_S_wd",sep="") 
+colnames(cosinormodel.wd)[2:ncol(cosinormodel.wd)]<-paste(colnames(cosinormodel.wd)[2:ncol(cosinormodel.wd)],"_wd",sep="") 
 ```
 
 
 
 ```{r chunk24we,results="hide"}  
 minuteW=(ncol(count.we)-2)/1440
-Cos = ActCosinor_long2( count.data = count.we, window=minuteW,daylevel=FALSE)  
-Cos.log = ActCosinor_long2( count.data = log.count.we, window=minuteW,daylevel=FALSE)   
-extcos = ActExtendCosinor_long2(count.data = count.we, window=minuteW,daylevel=FALSE) 
-extcos.log = ActExtendCosinor_long2(count.data = log.count.we, window=minuteW,daylevel=FALSE)   
+Cos = ActCosinor_long2( count.data = count.we, window=minuteW)  
+Cos.log = ActCosinor_long2( count.data = log.count.we, window=minuteW)   
+extcos = ActExtendCosinor_long2(count.data = count.we, window=minuteW)  
+extcos.log = ActExtendCosinor_long2(count.data = log.count.we, window=minuteW)   
 colnames(Cos)<-c("ID","ndays","mesor","amp","acro","acrotime")
 colnames(Cos.log)<-c("ID","ndays","mesor_L","amp_L","acro_L","acrotime_L")
 colnames(extcos)<-gsub(paste("_",minuteW,sep=""),"_ext",colnames(extcos))
@@ -254,7 +251,7 @@ colnames(extcos.log)<-gsub(paste("_",minuteW,sep=""),"_ext_L",colnames(extcos.lo
 cosinormodel.1<-merge(Cos,Cos.log,by=c("ID","ndays"),all=TRUE) 
 cosinormodel.2<-merge(extcos,extcos.log,by=c("ID","ndays"),all=TRUE) 
 cosinormodel.we<-merge(cosinormodel.1[,-2],cosinormodel.2[,-2],by="ID",all=TRUE)  
-colnames(cosinormodel.we)[2:ncol(cosinormodel.we)]<-paste(colnames(cosinormodel.we)[2:ncol(cosinormodel.we)],"_S_we",sep="")  
+colnames(cosinormodel.we)[2:ncol(cosinormodel.we)]<-paste(colnames(cosinormodel.we)[2:ncol(cosinormodel.we)],"_we",sep="")  
 ```
 
   
@@ -263,9 +260,9 @@ colnames(cosinormodel.we)[2:ncol(cosinormodel.we)]<-paste(colnames(cosinormodel.
 
 ```{r chunk25}   
 is_all.wd = IS_long2(count.data = count.wd, window=(ncol(count)-2)/144, method = "average"  )  #10 minute  
- colnames(is_all.wd)[2]<-"IS_wd"  
+colnames(is_all.wd)[2]<-"IS_wd"  
 is_all.we = IS_long2(count.data = count.we, window=(ncol(count)-2)/144, method = "average"  )  #10 minute  
- colnames(is_all.we)[2]<-"IS_we"   
+colnames(is_all.wd)[2]<-"IS_we"   
 ```
 
 ```{r chunk24x, include=FALSE}  
@@ -308,7 +305,7 @@ Notice that, here, for simplicity and better interpretability, for each subject,
 
 ```{r fpca26,include=FALSE}
 ######################################################### 
-# 2.6 functional principal component analysis: f=1 WD; f=2 WE
+# 2.6 functional principal component analysis
 
 ftitle<-c("weekday", "weekend")
 for (f in 1:2){ 
@@ -461,23 +458,12 @@ return(Fmer81.mask)
 
 
 # For sleep data, wear two mask (allday mask and WD only mask)
-MeanWithMask<-function(Fmer5.N.all,Fmer5,QCnights.allday,QCnights=0,Cmean4time=TRUE){ 
- 
+MeanWithMask<-function(Fmer5.N.all,Fmer5,QCnights.allday,QCnights=0){ 
 
-###a) Take averages for both subject and day level features although subject feature has same values for all days................
-  
-Ncol8<-which(colnames(Fmer5)=="weekday") # Ncol8 and after are weekday,zeroSleep,Nwd,Nwe,..  
+Ncol8<-which(colnames(Fmer5)=="weekday") # Ncol8 and after are weekday,zeroSleep,Nwd,Nwe,.. 
+ 
 Fmer81<-aggregate(.~filename,data=Fmer5[,c(1:(Ncol8-1))], mean,na.rm=T,na.action=na.pass)
 Fmer82<-aggregate(.~filename,data=Fmer5[,c(1,Ncol8:ncol(Fmer5))], sum,na.rm=T,na.action=na.pass) 
-
-timingC<-grep("cmean",colnames(Fmer5)) 
-if (length(timingC)>=1) {
-  Fmer83<-aggregate(.~filename,data=Fmer5[, c(1,timingC)], get_mean_sd_hour,unit2minute=60,out="mean" ,na.action=na.pass) #L5TIME
-  if (length(which(Fmer81[,"filename"]!=Fmer83[,"filename"]))>=1) stop("Mismatch IDs in Fmer83")
-  timingC<-grep("cmean",colnames(Fmer81)) 
-  Fmer81[,timingC]<-Fmer83[,-1]
-  # colnames(Fmer81)[timingC]==colnames(Fmer83)[-1]
-}  
 Fmer81.N.all<-alignMatrix(Fmer5.N.all,Fmer81)
 Fmer81.N.self.raw<-aggregate(.~filename,data=Fmer5[, 1:(Ncol8-1)], NcountSum,na.action=na.pass)  
 Fmer81.N.self<-alignMatrix(Fmer81.N.self.raw,Fmer81) 
@@ -496,74 +482,55 @@ Fmer8<-cbind(Fmer81.mask,Fmer82[,-c(1,2)]) #change Fmer81.mask, rm filename and 
 
 return(Fmer8)
 }
-``` 
  
+```
 
  
-```{r c3AvgWithMask,warning=FALSE,error=FALSE,echo=FALSE}  
+```{r c3AvgWithMask,warning=FALSE,error=FALSE,echo=FALSE} 
+# "filename"  "Date" "newID" "cleaningcode" 
+#  [5] "sleeponset" "wakeup"   .... "IV_intradailyvariability"   "IV"   ("IS" ..... "PC10") 
+#  [93]"weekday" "zeroSleep"  "Nwd"  "Nwe" Nwd_0s"    "Nwe_0s"
 #  Fmer81.N.all=number of good days for each feature 
 #  Fmer4[which(Fmer4[,"wakeup"]-Fmer4[,"sleeponset"] ==0) ,"zeroSleep"]<-1 
 #  Fmer4[,"Nwd_0s"] <-Fmer4[,"Nwd"]*Fmer4[,"zeroSleep"]  # Number of weekdays of zero sleep
 #  Fmer4[,"Nwe_0s"] <-Fmer4[,"Nwe"]*Fmer4[,"zeroSleep"]  # Number of weekends of zero sleep
 
-dictionary<-paste("module7_",studyname,"_all_features_dictionary.xlsx",sep="")  
-dict<-read.xlsx(dictionary,head=1,sheetName="dictionary",stringsAsFactors=F) 
-dict<-dict[which(!is.na(dict[,"Domain"])),] 
-SLdomain<-dict[which(dict[,"Domain"]=="SL"),"Variable"] 
-PAdomain<-dict[which(dict[,"Domain"]=="PA"),"Variable"] 
-CRdomain<-dict[which(dict[,"Domain"]=="CR"),"Variable"] 
-subjectlevel.variable<-dict[which(dict[,"level"]=="subject"),"Variable"] 
- 
-
 
 ftitle<-c("weekday", "weekend")
 inFN<-paste("module7b_",studyname,"_all_features_2_dayclean.csv",sep="") #clean file (must have TAC)
 outFN<-paste("module7d_",ftitle,"_",studyname,"_all_features_3_subject.csv",sep="")
-DayFeature<-read.csv(inFN,head=1,stringsAsFactors=F)                                                         #part1=day features
-wdwefea<-read.csv(paste("module7d_",studyname,"_new_features_page1.csv",sep=""),head=1,stringsAsFactors=F)   #part2=new wdwe subject features
-pcFN<-paste("module7d_",ftitle,"_",studyname,"_new_features_page5_denseFLMM_subject_PCs.csv",sep="")         #part3=fpca subject level wdwe
- 
- 
+DayFeature<-read.csv(inFN,head=1,stringsAsFactors=F)
+wdwefea<-read.csv(paste("module7d_",studyname,"_new_features_page1.csv",sep=""),head=1,stringsAsFactors=F)   
+pcFN<-paste("module7d_",ftitle,"_",studyname,"_new_features_page5_denseFLMM_subject_PCs.csv",sep="")
 
 
-#X01) add L5TIME_cmean columns   
-Csubject<-which(colnames(DayFeature) %in% subjectlevel.variable)  
-S4<-setdiff(1:ncol(DayFeature),Csubject)    # day level SL/PA/CR features  
+C1<-which(colnames(DayFeature)=="IS") 
+C2<-which(colnames(DayFeature)=="PC10") 
+C3<-which(colnames(DayFeature)=="sleeponset") 
+C4<-which(colnames(DayFeature)=="Nblocks_spt_sleep") 
+C5<-which(colnames(DayFeature)=="weekday") 
+S4<-setdiff(1:ncol(DayFeature),C1:C2) #rm subject level PA/CR features 
+S4a<-c(1,C3:C4,C5:ncol(DayFeature))   #sleep features
+S4b<-c(1,(C4+1):(C1-1),C5:ncol(DayFeature)) # nonsleep daylevel features
+
+# make mask for all days
 Fmer5<-DayFeature[,S4]  #remove old subject level features using all days, will replace new one
-timingC<-grep("TIME",colnames(Fmer5))
-timingMatrix<-Fmer5[,timingC]
-colnames(timingMatrix)<-paste(colnames(timingMatrix),"_cmean",sep="") #circle mean columns 
-CmeanDomain<-colnames(timingMatrix) 
-lastC<-max(timingC)
-Fmer6<-cbind(Fmer5[,c(1:lastC)],timingMatrix,Fmer5[(lastC+1):ncol(Fmer5)])
-
-
-#X02) subset for Fmer6 (old daylevel features)
-C5<-which(colnames(Fmer6)=="weekday")  
-Csleep<-which(colnames(Fmer6) %in% SLdomain) 
-Cother<-which(colnames(Fmer6) %in% c(PAdomain,CRdomain,CmeanDomain)) 
-sleepColumns<-c(1,Csleep,C5:ncol(Fmer6))        # sleep features
-nonsleepColumns<-c(1,Cother,C5:ncol(Fmer6))        # nonsleep daylevel features
-
-
-Ncol8<-which(colnames(Fmer6)=="weekday")  # Ncol8 after are weekday,zeroSleep,Nwd,Nwe,.. 
-Fmer6.N.all<-aggregate(.~filename,data=Fmer6[, c(1,B:(Ncol8-1))], NcountSum,na.action=na.pass) 
-tailname<-colnames(Fmer6)[Ncol8:ncol(Fmer6)] 
+Ncol8<-which(colnames(Fmer5)=="IV")+1 # Ncol8 after are weekday,zeroSleep,Nwd,Nwe,.. 
+Fmer5.N.all<-aggregate(.~filename,data=Fmer5[, c(1,B:(Ncol8-1))], NcountSum,na.action=na.pass) 
+tailname<-colnames(Fmer5)[Ncol8:ncol(Fmer5)] 
  
-H<-holidayplusweekends(Fmer6,holidayFN=holidayFN)      
+H<-holidayplusweekends(DayFeature,holidayFN=holidayFN)      
 #f=1/2 for WD/WE................................................
 for (f in 1:2){
 
-#x1) Old day level features summaryized for WD or WE only: Note sleep has special "weekend" definition.
+#x1) Old features
 if (f==1) {sleepSet<-H$SLfeatureSwd; paSet<-H$PAfeatureSwd; QCnights=QCnights.feature.alpha[3]}
 if (f==2) {sleepSet<-H$SLfeatureSwe; paSet<-H$PAfeatureSwe; QCnights=QCnights.feature.alpha[4]}
-table(Fmer6[sleepSet,"weekday"]) 
-table(Fmer6[paSet,"weekday"])
- 
-sleepWD<-Fmer6[sleepSet,sleepColumns]   
-paWD<-Fmer6[paSet,nonsleepColumns]   
-SleepData<-MeanWithMask(Fmer6.N.all,Fmer5=sleepWD,QCnights.allday=QCnights.feature.alpha[1],QCnights=QCnights)   
-PAData<-MeanWithMask(Fmer6.N.all,Fmer5=paWD,QCnights.allday=QCnights.feature.alpha[1],QCnights=QCnights)  
+  
+sleepWD<-DayFeature[sleepSet,S4a]   
+paWD<-DayFeature[paSet,S4b]   
+SleepData<-MeanWithMask(Fmer5.N.all,Fmer5=sleepWD,QCnights.allday=QCnights.feature.alpha[1],QCnights=QCnights)   
+PAData<-MeanWithMask(Fmer5.N.all,Fmer5=paWD,QCnights.allday=QCnights.feature.alpha[1],QCnights=QCnights)  
 
 Fmer8<-merge(SleepData,PAData,by="filename",all=TRUE,suffix=c("_sleep","")) #Nwd.. 6 duplicate columns 
 dim(PAData)
@@ -574,35 +541,23 @@ dim(Fmer8)
   
 #x2) PCs
 wdwePC<-read.csv(pcFN[f],head=1,stringsAsFactors=F)
-colnames(wdwePC)[3:ncol(wdwePC)]<-paste("PC",1:20,"_S",sep="")
+colnames(wdwePC)[3:ncol(wdwePC)]<-paste("PC",1:20,sep="")
 wdwePC2<-wdwePC[,c(1,3:12)]
 
 #x3) newfeatures
 if (f==1) S9<-c("filename","newID",colnames(wdwefea)[grep("wd",colnames(wdwefea))])
 if (f==2) S9<-c("filename","newID",colnames(wdwefea)[grep("we",colnames(wdwefea))]) 
-wdweSubjectFea<-merge(wdwefea[,S9],wdwePC2,by="filename",all=TRUE)
+part2<-merge(wdwefea[,S9],wdwePC2,by="filename",all=TRUE)
 
-#x4) merage old daylevel feature on wdwe + new wdwe subject leve + new wdwePCs
-Fmer9<-merge(Fmer8,wdweSubjectFea,by="filename",all=TRUE) 
+#x4) merage new daylevel feature + wdwe subject leve + wdwePCs
+Fmer9<-merge(Fmer8,part2,by="filename",all=TRUE) 
 
 C8<-which(colnames(Fmer9) %in% c(tailname,paste(tailname,"_sleep",sep="")))
 C9<-which(colnames(Fmer9)=="newID") 
 C10<-c(1,C9,setdiff(2:ncol(Fmer9),c(C9,C8)),C8)
 Fmer9<-Fmer9[,C10]  
 Fmer9[,"cleancode2"]<-rowSums( (is.na(Fmer9))) # of missing feature, 0 means no missing  
-
- 
-
-rmwdwe<-function(x){y<-unlist(strsplit(x,"\\_")) 
-                    z<-y[length(y)]
-                    if (z=="wd" | z=="we") t<-paste(y[-length(y)],collapse="_") else t<-x
-                    return(t)}
-newname.rmwdwe<-as.character(unlist(lapply(colnames(Fmer9),rmwdwe)))
-colnames(Fmer9)<-newname.rmwdwe
 write.csv(Fmer9, file=outFN[f],  row.names = FALSE )  
- 
-# R4.2.2 Error in utils::write.table(Fmer9, file = outFN[f], row.names = FALSE,  :  unimplemented type 'list' in 'EncodeElement'
-
  
 Fmer9.withmissing<-Fmer9[which(Fmer9[,"cleancode2"]>=1),]
 rownames(Fmer9.withmissing)<-NULL 
@@ -674,3 +629,5 @@ cleancode2 | number of NAs in the feature table
 
 How to run this? 
   
+cd /data/guow4/project0/GGIR/postGGIR/postGGIR_compile/v2/example/afterGGIR   
+R -e "rmarkdown::render('module7d_Example_calculate_WD_WE_avg_features.Rmd'   )" 

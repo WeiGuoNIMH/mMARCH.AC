@@ -15,8 +15,7 @@ DataShrink(
   epochOut = 60,
   useIDs.FN = NULL,
   RemoveDaySleeper = FALSE,
-  trace = FALSE,
-  Step = 1
+  trace = FALSE
 )
 }
 \arguments{
@@ -41,8 +40,6 @@ DataShrink(
 \item{RemoveDaySleeper}{\code{logical}  Specify if the daysleeper nights are removed from the calculation of number of valid days for each subject. Default is FALSE.}
 
 \item{trace}{\code{logical}  Specify if the intermediate results is printed when the function was executed. Default is FALSE.}
-
-\item{Step}{\code{number}  Specify which of the varaible need to be cleaned. For example, Step = 1 for the "anglez" variable, and Step = 2 for the "enmo" variable.}
 }
 \value{
 Files were written to the specified sub-directory, named as flag_ALL_studyname_ENMO.data.Xs.csv and flag_ALL_studyname_ANGLEZ.data.Xs.csv, which Xs is the epoch size to which acceleration was averaged (seconds) in GGIR output.  This excel file includs the following columns, 

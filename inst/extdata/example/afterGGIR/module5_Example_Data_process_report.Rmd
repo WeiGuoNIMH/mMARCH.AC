@@ -1,7 +1,7 @@
 ---
-title: 'postGGIR: Data Processing and Exploratory Data Analysis with GGIR output'
+title: 'mMARCH.AC module 5: Data Processing and Exploratory Data Analysis with GGIR output'
 author: "Wei Guo"
-date: "2021-02-19"
+date: "2022-09-20"
 output:
   html_document:
     df_print: paged
@@ -39,13 +39,12 @@ part4_data_imputation.R:
 ```
 
 ```{r ,include=FALSE  }
-currentdir="/data/guow4/project0/GGIR/postGGIR/postGGIR_compile/postGGIR3.0/inst/extdata/example/afterGGIR"
+currentdir="/data/guow4/project0/GGIR/postGGIR/postGGIR_compile/v2/example/afterGGIR"
 studyname="Example"
 bindir=""
-outputdir="/data/guow4/project0/GGIR/postGGIR/postGGIR_compile/postGGIR3.0/inst/extdata/example/GGIR/output_binfile"
+outputdir="/data/guow4/project0/GGIR/postGGIR/postGGIR_compile/v2/example/GGIR/output_binfile"
 epochIn=5
-epochOut=5
-flag.epochOut=60
+epochOut=60
 log.multiplier=9250
 QCdays.alpha=0
 QChours.alpha=3
@@ -61,7 +60,7 @@ RemoveDaySleeper=FALSE
    + Data Clean
       * Remove days with valid hours < `r QChours.alpha`
       * Remove samples with valid days < `r QCdays.alpha`
-   + Average ENMO data into `r flag.epochOut/60` minutes window
+   + Average ENMO data into `r epochOut/60` minutes window
    + Check duplicate samples
    + Imputation using subject-level mean using the clean data
    + Graphical representation of the data
@@ -77,7 +76,7 @@ summaryFN1<-paste(currentdir,"/summary/",studyname,"_ggir_output_summary.xlsx",s
 summaryFN2<-paste(currentdir,"/summary/part24daysummary.info.csv",sep="")
 
 sheetName<-c("1_fileList","2_fileSummary","3_dupIDs","4_IDerror","5_NvalidDays","6_Ndays_table","7_missingPattern","8_missingPattern_table","9_final")
-
+ 
   
 D2<-read.xlsx(summaryFN1,head=1,sheetName = sheetName[2])  
 D1<-as.data.frame(cbind(c("GGIR version:","bin files","GGIR folder"),
@@ -88,8 +87,10 @@ D2.story<-paste("For ",studyname," data, there are ",D2[1,4]," unique bin files 
 countunique<-function(x){t<-table(gsub(" Hours","",x))
 return(paste(paste(names(t),collapse="/"),"(freq=",paste(t,collapse="/"),")",sep="")) } 
 Device<-read.xlsx(summaryFN1,head=1,sheetName = "10_deviceInfo") 
-Device.story<-paste("The accelerometer data was measured by the ",countunique(Device[,"monitor.name"])," device in ",countunique(Device[,"sample.frequency.in.Hertz"])," Hertz for ", countunique(Device[,"Measurement_Period"])," hours.",sep="")
+if ("Measurement_Period" %in% colnames(Device)) measPeriod<-countunique(Device[,"Measurement_Period"]) else measPeriod<-"unknown"
+Device.story<-paste("The accelerometer data was measured by the ",countunique(Device[,"monitor.name"])," device in ",countunique(Device[,"sample.frequency.in.Hertz"])," Hertz for ", measPeriod," hours.",sep="")
 ```
+
 Note. Nid(BinFiles) is the number of unique bin files instead of number of subjects.
 
 **`r Device.story`**
@@ -106,7 +107,10 @@ kable(D1,caption="Table 1: Basic information"  )
 kable(D2[,-1],caption="Table 2: Summary of GGIR output")
 ```
 
-# 2. Check sleep status and daysleepers
+# 2. Check sleep status and daysleepers    
+   +  nightsleeper (sleep period did not overlap with noon) 
+   +  daysleeper (sleep period did overlap with noon, i.e. onset<36,wakeup>36)
+
 
 ```{r c3,echo=FALSE,fig.width=10,fig.height=4 }   
 E<-read.csv(summaryFN2,head=1,stringsAsFactors=F)
@@ -196,7 +200,7 @@ plot(data[,"RowNonWear23"]/4 ,xlab="index of days/ids",ylab="NonWear Hours" ,col
 #plot(data[,"RowNonWear23"]/4,data[,"N.hours"]-data[,"N.valid.hours"],xlab="NonWear Time",ylab="Invalid Hours",main=studyname) 
 #               15minutes /60= 1/4
  
-data2<-aggregate(data$RowNonWear23, by=list(Category=data$filename2), FUN=mean)
+data2<-aggregate(data$RowNonWear23, by=list(Category=data$filename2), FUN=mean,na.rm=TRUE) #nonwear=2,3, unit=15minutes
 plot(data2[,2]/4,  xlab="Subject",ylab="Subject mean of NonWear hours", col="blue")
 hist(data2[,2]/4,  xlab="Subject mean of NonWear hours" , col="orange",main="")
 ```
@@ -232,10 +236,10 @@ try( barplot(t2,xlab="ith day is missing",col="pink" ) )
 
 Check missing pattern of each sample. Most missingness are expected on the first and last day. 
 
-```{r c6plotmissing, echo=FALSE }  
+```{r c6plotmissing, echo=FALSE ,fig.width=10,fig.height=5}  
 par(mfrow=c(1,1)) 
 t6<- table(D9[,"misspattern"])  
-par(mai=c(1.02,2.52,0.82,0 )) # bottom,left,up,right
+par(mai=c(1.02,4.52,0.82,0 )) # bottom,left,up,right
 barplot(t6,main="missing pattern (f>=5)",horiz=TRUE,las=2,col="blue")
 if (length(t6)>=20) {t6<-t6[t6>=5] 
 barplot(t6,main="missing pattern (f>=5)",horiz=TRUE,las=2,col="blue") 
@@ -255,14 +259,14 @@ Under the  `r paste( currentdir,"/data/",  sep="")` directory,
 
      +  step1.   `r paste("All_",studyname,"_ANGLEZ/ENMO.data.csv",sep="") ` are merged angleZ/ENMO data for all subjects. Please be aware that there are some extra head lines from cat command. Format= filename,Date,00:00:00... 
      +  step2.  `r paste("flag_All_",studyname,"_ANGLEZ/ENMO.data.Xs.csv",sep="") ` are adding basic information mainly from part2 summary file for the merged angleZ/ENMO data. Xs are the epoch length in the output file. For example, 60s means the data was reduced into minute level by taking minute level mean for each line. Format=filename,Date,id,calender_date,N.valid.hours,N.hours,weekday,measurementday,newID,Nmiss_c9_c31 missing,Ndays,ith_day, Nmiss,Nnonmiss,misspattern,RowNonWear,NonWearMin,remove16h7day,duplicate,00:00:00... 
-     +  step3.  `r paste("impu.flag_All_",studyname,"_ENMO.data.",flag.epochOut,"s.csv",sep="") ` is impute all NAs by subject-level mean on that column. Please be aware that there are NAs after imputation due to systematic missingness, which means we observe NAs on same timestamp for some subjects.  Format are same as above but adding ImpuMiss column. 
-     +  Hint, please remove data with  remove16h7day=1 or duplicate=remove or ImpuMiss>=1 for statistical analysis.  
+     +  step3.  `r paste("impu.flag_All_",studyname,"_ENMO.data.",epochOut,"s.csv",sep="") ` is impute all NAs by subject-level mean on that column. Please be aware that there are NAs after imputation due to systematic missingness, which means we observe NAs on same timestamp for some subjects.  Format are same as above but adding ImpuMiss column. 
+     +  Hint, please remove data with  remove16h7day=1 or duplicate=remove or ImpuMiss>=1 for statistical analysis (i.e. use KEEP=1).  
 
  
  
 
 ```{r c21ansM , echo=FALSE }  
-inFN<-paste(currentdir,"/data/impu.flag_All_",studyname,"_ENMO.data.",flag.epochOut,"s.csv",sep="")
+inFN<-paste(currentdir,"/data/impu.flag_All_",studyname,"_ENMO.data.",epochOut,"s.csv",sep="")
 D<-read.csv(inFN,head=1, stringsAsFactors=FALSE) 
 
 #dim(D)
@@ -296,7 +300,7 @@ action<-ifelse(RemoveDaySleeper,"Remove ","Mark but keep ")
 
 
 ansM<-rbind(c(ans1$N,""),c(ans1b$N,paste(setdiff(ans1$ids,ans1b$ids),collapse=",")), 
-                         c(ans2$N,paste(action,paste(setdiff(ans1b$ids,ans2$ids),collapse=","),sep=":")), 
+                         c(ans2$N,paste(action,paste(setdiff(ans1b$ids,ans2$ids),collapse=","),sep=":")), #daysleeper
                          c(ans3$N,paste(setdiff(ans2$ids,ans3$ids),collapse=",")), 
                          c(ans4$N,paste(setdiff(ans3$ids,ans4$ids),collapse=",")), 
                          c(ans5$N,paste(setdiff(ans4$ids,ans5$ids),collapse=",")),  
@@ -392,27 +396,26 @@ axis(1, at = time.labels.at, labels = time.labels)
 abline(v = hour.line.at, col = "gray", lty = "dotted") 
   
 ```
-
-```{r fig2, echo=FALSE, message = F, warning = F, fig.width= 10,fig.height=5}
  
+
+```{r fig2, echo=FALSE, message = F, warning = F, fig.width= 10,fig.height=5} 
 ## plot all profiles   
 LhTAC.mean <- apply(LhTAC, 2, mean, na.rm=T)
-LhTAC.sd <- apply(LhTAC, 2, sd, na.rm=T)
-
+LhTAC.sd <- apply(LhTAC, 2, sd, na.rm=T) 
+my.ylim<-range(c(LhTAC, LhTAC.mean + 1.96*LhTAC.sd, LhTAC.mean - 1.96*LhTAC.sd),na.rm=TRUE) 
 
 col.light = rgb(0, 0, 0, alpha = 5, maxColorValue = 255) 
-plot(x.range, LhTAC[1,], type = "n", ylim = range(LhTAC,na.rm=TRUE),xaxt = "n", ylab = "Log (9250*ENMO + 1)", xlab = "Hour", 
+plot(x.range, LhTAC[1,], type = "n", ylim = my.ylim,xaxt = "n", ylab = "Log (9250*ENMO + 1)", xlab = "Hour", 
 col = col.light, main = "Diurnal Profiles (mean+-1.96sd)")
 
-for(i in 1:n.row) lines(x.range, LhTAC[i,], col = col.light, type = "l", lwd = 1)
-lines(x.range, LhTAC.mean, col = "blue", type = "l", lwd = 2)
-lines(x.range, LhTAC.mean + 1.96*LhTAC.sd, col = "blue", type = "l", lty = "dashed", lwd = 2)
-lines(x.range, LhTAC.mean - 1.96*LhTAC.sd, col = "blue", type = "l", lty = "dashed", lwd = 2)
+for(i in 1:n.row) lines(x.range, LhTAC[i,], col = col.light, type = "l", lwd = 1.5)
+lines(x.range, LhTAC.mean, col = "blue", type = "l", lwd = 1.5)
+lines(x.range, LhTAC.mean + 1.96*LhTAC.sd, col = "blue", type = "l", lty = "dashed", lwd = 1.5)
+lines(x.range, LhTAC.mean - 1.96*LhTAC.sd, col = "blue", type = "l", lty = "dashed", lwd = 1.5)
 axis(1, at = time.labels.at, labels = time.labels)
-abline(v = hour.line.at, col = "gray", lty = "dotted") 
-
- 
+abline(v = hour.line.at, col = "gray", lty = "dotted")  
 ```
+ 
  
 Marginal info: **hour-specific means and standard deviations**
 
@@ -622,5 +625,5 @@ How to run this?
  
  
  
-cd /data/guow4/project0/GGIR/postGGIR/postGGIR_compile/postGGIR3.0/inst/extdata/example/afterGGIR   
-R -e "rmarkdown::render('part5_Example_postGGIR.report.Rmd'   )" 
+cd /data/guow4/project0/GGIR/postGGIR/postGGIR_compile/v2/example/afterGGIR   
+R -e "rmarkdown::render('module5_Example_Data_process_report.Rmd'   )" 

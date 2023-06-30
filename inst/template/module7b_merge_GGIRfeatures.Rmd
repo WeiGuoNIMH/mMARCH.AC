@@ -72,14 +72,8 @@ setwd(currentdir)
 #---------------------------------main-body--------------------------------------- 
  
 foutFN<-function(x,studyname) paste("module7a_",studyname,"_new_features_page",x,".csv",sep="")   
-page1<-read.csv(foutFN("1_features",studyname),nrow=100,head=1,stringsAsFactors=F)
-S1<-which(colnames(page1)=="SubjectLevel")+1
-page1.subjectlevel<-colnames(page1)[S1:ncol(page1)] 
-subjectlevel<-c(page1.subjectlevel, paste("PC",1:20,sep="")) 
-
- 
 outFN<-paste("module7b_",studyname,"_all_features_",1:4,c("_day","_dayclean","_subject","_subjectSD"),".csv",sep="")
-outFN.anno<-paste("module7_",studyname,"_all_features_dictionary.xlsx",sep="") 
+dictionary<-paste("module7_",studyname,"_all_features_dictionary.xlsx",sep="") 
   
 library(xlsx)   
 library(knitr) 
@@ -90,24 +84,22 @@ library(kableExtra)
 setwd(currentdir) 
 
 feaFN<-system.file("template", "features.dictionary.xlsx", package = "mMARCH.AC")  
-# system(paste("cat ",feaFN," > ",outFN.anno,sep=""))
-file.copy(from=feaFN, to=outFN.anno, overwrite = TRUE)
+# system(paste("cat ",feaFN," > ",dictionary,sep=""))
+file.copy(from=feaFN, to=dictionary, overwrite = TRUE)
 ```
 
-# 1 Read R features  
+# 1 Read mMARCH.AC new features  
 
-```{r chunk1}
-#BD1<-read.xlsx(inFN,sheetName="1_features", header = TRUE)
-#BD2<-read.xlsx(inFN, sheetName = "5_denseFLMM_subject_PCs", header = TRUE)
-
-BD1<-read.csv(foutFN("1_features",studyname), header = TRUE,stringsAsFactors=F)
-BD2<-read.csv(foutFN("5_denseFLMM_subject_PCs",studyname), header = TRUE,stringsAsFactors=F)
-
-colnames(BD2)[3:ncol(BD2)]<-paste("PC",1:20,sep="")
-BD<-merge(BD1,BD2[,1:12],by=c("filename","newID"),all=TRUE)
+```{r chunk1}  
+newfea<-read.csv(foutFN("1_features",studyname), header = TRUE,stringsAsFactors=F)
+fpca.day<-read.csv(foutFN("4_denseFLMM_day_PCs",studyname), header = TRUE,stringsAsFactors=F)
+fpca.subject<-read.csv(foutFN("5_denseFLMM_subject_PCs",studyname), header = TRUE,stringsAsFactors=F)
+fpca<-merge(fpca.day,fpca.subject,by=c("filename","newID"),suffix=c("","_S"),all=TRUE)
+ 
+newfeadata<-merge(newfea,fpca,by=c("filename","Date","newID"),all=TRUE)
 ```
 
-# 2 Read sleep features from GGIR summary files
+# 2 Read sleep features and other reference features from GGIR summary files
 ```{r read2}
 data.dir2<-paste(outputdir,"/results",sep="")   
 inFN2<-c("part2_summary",
@@ -120,18 +112,22 @@ sleepFull.fn<-paste(outputdir,"/results/QC/part4_nightsummary_sleep_full.csv",se
 sleepFull<-read.csv(sleepFull.fn,head=1,stringsAsFactors=F)  
 ```
 
+# 3 Feature list
+
 ```{r dict,echo=FALSE}
-dict<-read.xlsx(outFN.anno,head=1,sheetName="dictionary",stringsAsFactors=F) 
+dict<-read.xlsx(dictionary,head=1,sheetName="dictionary",stringsAsFactors=F) 
 dict<-dict[which(!is.na(dict[,"Domain"])),]
 
 SLdomain<-dict[which(dict[,"Domain"]=="SL"),"Variable"] 
 PAdomain<-dict[which(dict[,"Domain"]=="PA"),"Variable"] 
 CRdomain<-dict[which(dict[,"Domain"]=="CR"),"Variable"] 
+subjectlevel.variable<-dict[which(dict[,"level"]=="subject"),"Variable"] 
 
-part2<-dict[which(dict[,"Source"]=="GGIR-part2"),"Variable"] #9/1 IV and IS
-part4<-dict[which(dict[,"Source"]=="GGIR-part4"),"Variable"]
-part6<-dict[which(dict[,"Source"]=="GGIR-part5"),"Variable"]
-partR<-dict[which(dict[,"Source"]=="mMARCH.AC"),"Variable"]
+
+part2variable<-dict[which(dict[,"Source"]=="GGIR-part2"),"Variable"] #9/1 IV and IS
+part4variable<-dict[which(dict[,"Source"]=="GGIR-part4"),"Variable"]
+part5variable<-dict[which(dict[,"Source"]=="GGIR-part5"),"Variable"]
+partRvariable<-dict[which(dict[,"Source"]=="mMARCH.AC"),"Variable"]
 
 kable(dict[,2:5]) %>%
     kable_styling(bootstrap_options = c("striped", "hover"))
@@ -143,29 +139,26 @@ table(dict[,"Source"])
 ```{r chunk2,include=FALSE}
 ##################################################### 
 # 1.1 sleep variables for sleep domain
-D<-list()
-for (i in 1:length(inFN3)) {
-   D[[i]]<-read.csv(inFN3[i],head=1,stringsAsFactors=F)
-   #print(colnames(D[[i]]))
-}
-
-data<-D[[4]]
-colnames(data)
-data[,"sleep_Midpoint"]<-(data[,"sleeponset"]+data[,"wakeup"])/2   
-data[,"sleep_efficiency"]<- data[,"SleepDurationInSpt"]/data[,"SptDuration"]     
-colnames(data)[colnames(data)=="calendar_date"]<- "calendardate"  #6/5/2020
-
-
-
-S0<-which(data[,"sleep_Midpoint"]==0) 
-if (length(S0)>=1) {data[S0,c("wakeup","sleeponset")]
-                    data[S0,"sleep_Midpoint"]<-NA}
-
-S1<- c("filename","calendardate",intersect(part4,colnames(data))) 
-d4<-data[,S1] 
-d4[,"calendardate"]<- format(as.Date(d4[,"calendardate"],"%d/%m/%Y"), "%Y-%m-%d")
  
-           
+gpart2<-read.csv(inFN3[1],head=1,stringsAsFactors=F) # subject
+gpart4<-read.csv(inFN3[4],head=1,stringsAsFactors=F) # night 
+gpart5<-read.csv(inFN3[6],head=1,stringsAsFactors=F)  # day summary
+
+ 
+colnames(gpart4)
+gpart4[,"sleep_Midpoint"]<-(gpart4[,"sleeponset"]+gpart4[,"wakeup"])/2   
+gpart4[,"sleep_efficiency"]<- gpart4[,"SleepDurationInSpt"]/gpart4[,"SptDuration"]     
+colnames(gpart4)[colnames(gpart4)=="calendar_date"]<- "calendardate"  #6/5/2020
+
+
+
+S0<-which(gpart4[,"sleep_Midpoint"]==0) 
+if (length(S0)>=1) {gpart4[S0,c("wakeup","sleeponset")]
+                    gpart4[S0,"sleep_Midpoint"]<-NA} 
+S1<- c("filename","calendardate",intersect(part4variable,colnames(gpart4))) 
+gpart24.sel<-gpart4[,S1] 
+gpart24.sel[,"calendardate"]<- format(as.Date(gpart24.sel[,"calendardate"],"%d/%m/%Y"), "%Y-%m-%d")
+         
 
 ##################################################### 
 # 1.2 sleep variables for PA domain
@@ -205,31 +198,29 @@ return(ans)
 }
 
  
-t<-fixDup(part5ww=D[[6]],part4=sleepFull)
-data<-t$data  #D[[6]] #part5 daysummary
-S2a<-which(data[,"cleaningcode"]>=2) #If the study did not propose a sleep log to the individuals, then all nights are removed with cleaningcode higher than 1.
-S2b<-which(colnames(data) %in% intersect(part6,SLdomain))
-data[S2a,S2b]<-NA 
-colnames(data) 
+t<-fixDup(part5ww=gpart5,part4=sleepFull)
+part5data.clean<-t$data   #part5 daysummary
+S2a<-which(part5data.clean[,"cleaningcode"]>=2) #If the study did not propose a sleep log to the individuals, then all nights are removed with cleaningcode higher than 1.
+S2b<-which(colnames(part5data.clean) %in% intersect(part5variable,SLdomain))
+part5data.clean[S2a,S2b]<-NA 
+colnames(part5data.clean) 
 
-quantile(as.numeric(data[,"L10TIME_num"]),na.rm=T)
-quantile(as.numeric(data[,"M10TIME_num"]),na.rm=T)
-quantile(as.numeric(data[,"dur_day_total_IN_min"]),na.rm=T)
-colnames(data)[colnames(data)=="calendar_date"]<- "calendardate"  #6/5/2020 
-data[,"RA_ggir"]<-(data[,"M10VALUE"]- data[,"L5VALUE"])/(data[,"M10VALUE"]+ data[,"L5VALUE"])  
-S2<-c("filename","calendardate",intersect(part6 ,colnames(data)),"cleaningcode"   ) 
-d6<-data[,S2] 
-table(d6[,"cleaningcode"])
+quantile(as.numeric(part5data.clean[,"L10TIME_num"]),na.rm=T)
+quantile(as.numeric(part5data.clean[,"M10TIME_num"]),na.rm=T)
+quantile(as.numeric(part5data.clean[,"dur_day_total_IN_min"]),na.rm=T)
+colnames(part5data.clean)[colnames(part5data.clean)=="calendar_date"]<- "calendardate"  #6/5/2020 
+part5data.clean[,"RA_ggir"]<-(part5data.clean[,"M10VALUE"]- part5data.clean[,"L5VALUE"])/(part5data.clean[,"M10VALUE"]+ part5data.clean[,"L5VALUE"])  
+S2<-c("filename","calendardate",intersect(part5variable ,colnames(part5data.clean)),"cleaningcode"   ) 
+part5data.clean.sel<-part5data.clean[,S2] 
+table(part5data.clean.sel[,"cleaningcode"]) 
 
 ##################################################### 
-# 1.3 part2_summary for IS and IV
-
-data<-D[[1]]
-colnames(data)    
-S3<-c("filename", intersect(part2 ,colnames(data))   ) 
-d2<-data[,S3] 
-miss<-which(rowSums(is.na(d2[,-1]))==ncol(d2)-1)
-if (length(miss)>=1) d2<-d2[-miss,]
+# 1.3 part2_summary for IS and IV 
+   
+S3<-c("filename", intersect(part2variable ,colnames(gpart2))   ) 
+gpart2.clean<-gpart2[,S3] 
+miss<-which(rowSums(is.na(gpart2.clean[,-1]))==ncol(gpart2.clean)-1)
+if (length(miss)>=1) gpart2.clean<-gpart2.clean[-miss,]
 ```  
  
  
@@ -262,36 +253,37 @@ Notice that part 4 is focused on sleep research, by which the cleaned reported i
    
 
 #
-# 3 Merge all features  (all=TRUE)
+# 3 Merge all features (mMARCH.AC + GGIR)  
 
-
+ 
 
 ```{r chunk3,results="hide"}
 # d4,d6=bin.RData, d2=.bin
 ##################################################### 
 # 1.3  merge all features
-# Dmer=summary file,BD=junrui ouput using clean imputation data only
+# Dmer=summary file,newfeadata=junrui ouput using clean imputation data only
 
-Dmer0<-merge(d4,d6,by=c("filename","calendardate"),all=TRUE)
-Dmer0[,"filename"]<-gsub(".RData","",Dmer0[,"filename"])  
-Dmer<-merge(Dmer0,d2,by=c("filename" ),all.x=TRUE,all.y=FALSE)  
-dim(d4)
-dim(d6)
-dim(Dmer0) 
-dim(d2)
-head(Dmer)
+ggirmer0<-merge(gpart24.sel,part5data.clean.sel,by=c("filename","calendardate"),all=TRUE)
+ggirmer0[,"filename"]<-gsub(".RData","",ggirmer0[,"filename"])  
+ggirmer<-merge(ggirmer0,gpart2.clean,by=c("filename" ),all.x=TRUE,all.y=FALSE)  
+dim(gpart24.sel)
+dim(part5data.clean.sel)
+dim(ggirmer0) 
+dim(gpart2.clean)
+head(ggirmer)
 
-Fmer<-merge(BD,Dmer,by.x=c("filename","Date"),by.y=c("filename","calendardate"),all=TRUE)
-dim(BD)
-dim(Dmer)
+Fmer<-merge(newfeadata,ggirmer,by.x=c("filename","Date"),by.y=c("filename","calendardate"),all=TRUE)  #final merge
+       # note some data has newfeadata, but without GGIR data; and vice versa. need further clean.
+dim(newfeadata)
+dim(ggirmer)
 dim(Fmer)
-which(is.na(BD[,"newID"])) 
+which(is.na(newfeadata[,"newID"])) 
 which(is.na(Fmer[,"Date"]))  
 dim(Fmer)
 head(Fmer)
 
-
-if (length(setdiff(c(SLdomain,PAdomain,CRdomain),colnames(Fmer)))>=1) stop("check missing features")
+SmissFea<-setdiff(c(SLdomain,PAdomain,CRdomain),colnames(Fmer))
+if (length(SmissFea)>=1) stop(paste(c("check",length(SmissFea),"missing features as follows,",SmissFea),collapse=" ")) 
 
 S3<-c("filename","Date","newID","cleaningcode",SLdomain,PAdomain,CRdomain)
 Fmer2<-Fmer[,S3]
@@ -304,16 +296,14 @@ anno[which(colnames(Fmer2) %in% CRdomain)]<-"CR"
   
 
 category<-NULL
-category[1:4]<-"#"
-category[5:ncol(Fmer2)]<-"day"  
-category[which(colnames(Fmer2) %in% part2)]<-"ggir-subject"  
-category[which(colnames(Fmer2) %in% subjectlevel)]<-"subject"  
+category[1:4]<-"#" 
+category[5:ncol(Fmer2)]<-"day"   
+category[which(colnames(Fmer2) %in% subjectlevel.variable)]<-"subject"  
  
 dim(Fmer2) 
 Fmer3<-rbind(anno,category,Fmer2)
 dim(Fmer3)
-
-#write.xlsx(Fmer2, file=outFN, sheetName = "features",   col.names = TRUE, row.names = FALSE,append=TRUE)  
+ 
 write.csv(Fmer3, file=outFN[1],   row.names = FALSE )  
 # Note: newID=NA for those lines with R features, but no part2/5summary input. So use filename as ID index.
 
@@ -328,6 +318,8 @@ MustHaveTAC<-TRUE
 One thing to note is that a lot of nights have 0 sleep duration - this may be where GGIR has failed to identify the start and end points of the sleep period window during that day. To account for this, I excluded all nights where 'acc_wake' minus 'acc_onset' was zero. This means that individuals might have different numbers of weekday and weekend day measures going into their averages. It's a good idea to keep track of how many 'valid' weekdays and weekend days were included in each person's mean, then adjust any statistical analyses for these covariates.
 
 Here, the values of sleep variables were changed to NA when the nights have 0 sleep duration.
+
+Note, L5TIME and M10TIME will be averaged using circle mean formula provided by get_mean_sd_hour().
 
 ```{r chunk4,results="hide"}
 Fmer4<-Fmer2
@@ -349,32 +341,51 @@ Fmer4[,"Nwe_0s"] <-Fmer4[,"Nwe"]*Fmer4[,"zeroSleep"]  # Number of weekends of ze
 S7<-which(Fmer4[,"TAC"]>=0)
 if (MustHaveTAC & length(S7)>=1) Fmer5<-Fmer4[S7,] else Fmer5<-Fmer4   #clean file: filename,Date,newID,cleaningcode 
 
-write.csv(Fmer5, file=outFN[2],   row.names = FALSE )  
+write.csv(Fmer5, file=outFN[2],   row.names = FALSE )  #clean data
+```
   
+```{r chunk42,results="hide"}
+###0) add duplicate L5TIME,etc column for later circle mean calculation
+timingC<-grep("TIME",colnames(Fmer5))
+timingMatrix<-Fmer5[,timingC]
+colnames(timingMatrix)<-paste(colnames(timingMatrix),"_cmean",sep="") #circle mean columns
+lastC<-max(timingC)
+Fmer6<-cbind(Fmer5[,c(1:lastC)],timingMatrix,Fmer5[(lastC+1):ncol(Fmer5)])
 
-Ncol8<-which(colnames(Fmer5)=="PC10")+1 # Ncol8 after are weekday,zeroSleep,Nwd,Nwe,..
-Fmer81<-aggregate(.~filename,data=Fmer5[, c(1,B:(Ncol8-1))], mean,na.rm=T,na.action=na.pass)
-Fmer82<-aggregate(.~filename,data=Fmer5[,c(1,Ncol8:ncol(Fmer5))], sum,na.rm=T,na.action=na.pass)
+###a) Take averages for both subject and day level features although subject feature has same values for all days................
+    # note use na.action=na.pass in aggregate, otherwise you will lose rows with NA in other columns
+ 
+Ncol8<-which(colnames(Fmer6)=="weekday")   # Ncol8 after are weekday,zeroSleep,Nwd,Nwe,..
+Fmer81<-aggregate(.~filename,data=Fmer6[, c(1,B:(Ncol8-1))], mean,na.rm=T,na.action=na.pass) #head
+Fmer82<-aggregate(.~filename,data=Fmer6[,c(1,Ncol8:ncol(Fmer6))], sum,na.rm=T,na.action=na.pass) #tail
+timingC<-grep("cmean",colnames(Fmer6)) 
+Fmer83<-aggregate(.~filename,data=Fmer6[, c(1,timingC)], get_mean_sd_hour,unit2minute=60,out="mean",na.action=na.pass)  #L5TIME
+if (length(which(Fmer81[,"filename"]!=Fmer83[,"filename"]))>=1) stop("Mismatch IDs in Fmer83")
+timingC<-grep("cmean",colnames(Fmer81)) 
+Fmer81[,timingC]<-Fmer83[,-1]
+head(Fmer81[,timingC])
 
-# set mean=NA for those features with Nvalid night< 3 or 7.
+###b) set mean=NA for those features with Nvalid night< 3 or 7 (output=Fmer81.mask).
 NcountSum<-function(x) sum(as.numeric(!is.na(x))) #calcuate number of good value of each feature
-Fmer81.N<-aggregate(.~filename,data=Fmer5[, c(1,B:(Ncol8-1))], NcountSum,na.action=na.pass) 
+Fmer81.N<-aggregate(.~filename,data=Fmer6[, c(1,B:(Ncol8-1))], NcountSum,na.action=na.pass) 
 Fmer81.mask<-Fmer81
 for (j in 2:ncol(Fmer81.mask)) {S81<- which(Fmer81.N[,j] < QCnights.feature.alpha[1] )
                                 if (length(S81)>=1) Fmer81.mask[S81,j]<-NA}
 if (length(which(Fmer81.N[,"filename"]!=Fmer81[,"filename"]))>=1) stop("Mismatch IDs in Fmer81.mask")
 
-length(unique(Fmer5[,1]))
+length(unique(Fmer6[,1]))
 dim(Fmer81)
 dim(Fmer82) 
 if (sum(Fmer81[,1]!=Fmer82[,1])>0)  stop("Check IDs of two Fmer8 matrix")
-Fmer8<-cbind(Fmer81.mask,Fmer82[,-c(1,2)]) 
+
+###c) set mean=NA for those features with Nvalid night< 3 or 7 (output=Fmer81.mask).
+Fmer8<-cbind(Fmer81.mask,Fmer82[,-c(1,2)])   # filename,weekday(wrongsum)
 Fmer8[,"cleancode2"]<-rowSums( (is.na(Fmer81.mask)))
 Fmer8.bad<-Fmer81.N[which(Fmer8[,"cleancode2"]>=1),]
 rownames(Fmer8.bad)<-NULL
 write.csv(Fmer8, file=outFN[3],row.names = FALSE )  
 ```  
-**`r paste("Calculate subject-level mean when Nvalid.night>=",QCnights.feature.alpha[1], " for each feature. Set them as NAs and will be removed in JIVE for ", nrow(Fmer8.bad), " subjects (",length(which(Fmer5[,1] %in% Fmer8.bad[,1]))," days)  as follows,",sep="")`**
+**`r paste("Calculate subject-level mean when Nvalid.night>=",QCnights.feature.alpha[1], " for each feature. Set them as NAs and will be removed in JIVE for ", nrow(Fmer8.bad), " subjects (",length(which(Fmer6[,1] %in% Fmer8.bad[,1]))," days)  as follows,",sep="")`**
  
 
 cleancode2: number of missingness of features of each subject
@@ -389,18 +400,31 @@ if (nrow(Fmer8.bad)>=1) kable(Fmer8.bad,caption="N valid night of removed subjec
 #
 # 5 SD of each variable at the subject level
    sd=0 for day-level features such as amp_L, acro_L, PC1, PC2, ...	 
+ 
+   Note, L5TIME and M10TIME will be averaged using circle mean formula provided by get_mean_sd_hour().
 
 #### `r paste("Calculate subject-level SD for Nvalid.nihgt>=",QCnights.feature.alpha[2], " for features",sep="")`
 
 ```{r chunk4x-sd,results="hide"}  
-Fmer91<-aggregate(.~filename,data=Fmer5[, c(1,B:(Ncol8-1))], sd,na.rm=T,na.action=na.pass)
-Fmer92<-aggregate(.~filename,data=Fmer5[,c(1,Ncol8:ncol(Fmer5))], sum,na.rm=T,na.action=na.pass)  
+ 
+
+###a) Take averages for both subject and day level features although subject feature has same values for all days................ 
+Fmer91<-aggregate(.~filename,data=Fmer6[, c(1,B:(Ncol8-1))], sd,na.rm=T,na.action=na.pass)
+Fmer92<-aggregate(.~filename,data=Fmer6[,c(1,Ncol8:ncol(Fmer6))], sum,na.rm=T,na.action=na.pass)  
+timingC<-grep("cmean",colnames(Fmer6)) 
+Fmer93<-aggregate(.~filename,data=Fmer6[, c(1,timingC)], get_mean_sd_hour,unit2minute=60,out="sd",na.action=na.pass) #L5TIME
+if (length(which(Fmer91[,"filename"]!=Fmer93[,"filename"]))>=1) stop("Mismatch IDs in Fmer93")
+timingC<-grep("cmean",colnames(Fmer91)) 
+Fmer91[,timingC]<-Fmer93[,-1]
+head(Fmer91[,timingC])
+
+
 Fmer91.mask<-Fmer91
 for (j in 2:ncol(Fmer91.mask)) {S91<- which(Fmer81.N[,j] < QCnights.feature.alpha[2] )
                                 if (length(S91)>=1) Fmer91.mask[S91,j]<-NA}
 if (length(which(Fmer81.N[,"filename"]!=Fmer91[,"filename"]))>=1) stop("Mismatch IDs in Fmer91.mask")
 
-length(unique(Fmer5[,1]))
+length(unique(Fmer6[,1]))
 dim(Fmer91)
 dim(Fmer92) 
 if (sum(Fmer91[,1]!=Fmer92[,1])>0)  stop("Check IDs of two Fmer9 matrix")
@@ -412,7 +436,7 @@ write.csv(Fmer9, file=outFN[4],row.names = FALSE )
 
 ```
    
-**`r paste("Calculate subject-level SD when Nvalid.nihgt>=",QCnights.feature.alpha[2], " for each feature. Set them as NAs and will be removed in JIVE for ", nrow(Fmer9.bad), " subjects (",length(which(Fmer5[,1] %in% Fmer9.bad[,1]))," days)  as follows,",sep="")`**
+**`r paste("Calculate subject-level SD when Nvalid.nihgt>=",QCnights.feature.alpha[2], " for each feature. Set them as NAs and will be removed in JIVE for ", nrow(Fmer9.bad), " subjects (",length(which(Fmer6[,1] %in% Fmer9.bad[,1]))," days)  as follows,",sep="")`**
 
  
 

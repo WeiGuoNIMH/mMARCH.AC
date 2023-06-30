@@ -1,7 +1,7 @@
 ---
-title: 'Perform JIVE Decomposition for All Features using r.jive '
+title: 'mMARCH.AC module 7c: Perform JIVE Decomposition for All Features using r.jive '
 author: "Wei Guo"
-date: "2021-02-19"
+date: "2022-09-20"
 output:
   html_document:
     df_print: paged
@@ -23,11 +23,13 @@ knitr::opts_chunk$set(echo = TRUE)
  
 library(xlsx)   
 library(knitr)  
-currentdir="/data/guow4/project0/GGIR/postGGIR/postGGIR_compile/postGGIR3.0/inst/extdata/example/afterGGIR"
+currentdir="/data/guow4/project0/GGIR/postGGIR/postGGIR_compile/v2/example/afterGGIR"
 studyname="Example"
 setwd(currentdir) 
 #install.packages("r.jive")
 library(r.jive)
+QC.sleepdur.avg=c()
+QC.nblocks.sleep.avg=c()
 
 ```
 
@@ -77,16 +79,32 @@ return(d1[S0,])
 
 
 ```{r c3, results="hide"}  
-inFN<-paste("part7b_",studyname,"_all_features_",3:4,".csv",sep="")  
-jiveOutFN<-paste("part7d_",studyname,"_jive_Decomposition.csv",sep="")  
-scoreOutFN<-paste("part7d_",studyname,"_jive_predScore.csv",sep="")  
+inFN<-paste("module7b_",studyname,"_all_features_",1:4,c("_day","_dayclean","_subject","_subjectSD"),".csv",sep="")[3:4]
+jiveOutFN<-paste("module7c_",studyname,"_jive_Decomposition.csv",sep="")  
+scoreOutFN<-paste("module7c_",studyname,"_jive_predScore.csv",sep="")  
 
+
+subjectmeanFea<-read.csv(inFN[1], header = TRUE,stringsAsFactors=FALSE)  
+sleepdur<-subjectmeanFea[,"SleepDurationInSpt"]
+nblocks<-subjectmeanFea[,"Nblocks_spt_sleep"] 
+S1<-NULL
+if (length(QC.sleepdur.avg)==2) S1<-which(sleepdur<QC.sleepdur.avg[1] | sleepdur>QC.sleepdur.avg[2])
+if (length(QC.nblocks.sleep.avg)==2) S1<-c(S1,which(nblocks<QC.nblocks.sleep.avg[1] | nblocks>QC.nblocks.sleep.avg[2]))
+sleepQCremove<-subjectmeanFea[unique(sort(S1)),1]  
+if (is.null(QC.sleepdur.avg) & is.null(QC.nblocks.sleep.avg))  sleepQCremove.story<-"No data cleaning was carried on based on sleep duration and average number of sleep blocks" else sleepQCremove.story<-paste("Remove ",length(sleepQCremove), " samples with an average sleep duration <",QC.sleepdur.avg[1]," h or >",QC.sleepdur.avg[2]," h or with an average number of nocturnal sleep episodes <",QC.nblocks.sleep.avg[1]," or >",QC.nblocks.sleep.avg[2]," (", paste(sleepQCremove,collapse=","),").",sep="")   
+
+
+ 
 
 domainName<-c("SL","PA","CR")  
 jive.data.rownames<-list()
 jive.data<-list() 
 for (f in 1:2){#f=1 mean; f=2 sd
 d0<-read.csv(inFN[f], header = TRUE,stringsAsFactors=FALSE) 
+sleepQCremove.i<- which(d0[,1] %in% sleepQCremove) 
+if (length(sleepQCremove.i)>=1) d0<-d0[-sleepQCremove.i,]
+
+
 ncat<-NULL
 for (j in 1:ncol(d0)) ncat[j]<-length(table(d0[,j],useNA="no"))
 nopoly<-colnames(d0)[which(ncat==1)]
@@ -94,7 +112,7 @@ nopoly<-colnames(d0)[which(ncat==1)]
  
 sleepC1<-which(colnames(d0)=="sleeponset") #6/5/2020
 paC2<-which(colnames(d0)=="TAC")
-crC3<-which(colnames(d0)=="RA_ggir")  
+crC3<-which(colnames(d0)=="L5TIME_num")  
 crC4<-which(colnames(d0)=="PC10")
 S1<-c(sleepC1,paC2,crC3,crC4+1)
 
@@ -126,6 +144,11 @@ d<-rbind(jive.data[[1]],jive.data[[2]],jive.data[[3]]) #feature * ind
 d<-cbind(filename=jive.filenames,t(d))  # mean+sd
 ```
 
+
+**`r sleepQCremove.story`**
+
+
+
 # Global normalization of the input data 
 
 ```{r c5}  
@@ -140,7 +163,7 @@ for (k in 1:3){
 
 
 # Run JIVE 
-    +  Find failure of jive due to too many missingness. JIVE could allowed small proportion of missingness. So postGGIR add some steps to remove missingness.
+    +  Find failure of jive due to too many missingness. JIVE could allowed small proportion of missingness. So mMARCH.AC add some steps to remove missingness.
 
 
 ```{r c6, results="hide"}   
@@ -177,7 +200,7 @@ jive.filenames<-jive.filenames[-S9]
 action<-"Remove"
 dclean<-d[-which(d[,1] %in% S0[,1]),]
 } else action<-"Found but keep"
-jive.data.outFN<-paste("part7d_",studyname,"_jive_Input.csv",sep="")
+jive.data.outFN<-paste("module7c_",studyname,"_jive_Input.csv",sep="")
 write.csv(dclean,file=jive.data.outFN,row.names=F)
  
 if (length(S9)>=1 ){    
@@ -239,8 +262,8 @@ write.csv(jive.out,file=jiveOutFN,row.names=F)
 The variation explained by joint structure and individual structure  
  
 ```{r,echo=FALSE} 
-summary(res) 
-plot(res)
+summary(res)  
+showVarExplained(res, col = c("#999999", "#E69F00", "#56B4E9"))
 ``` 
  
 
@@ -266,7 +289,7 @@ J_Est<-NULL
 try(J_Est <- jive.predict(jive.data.norm, res))
 
 if (!is.list(J_Est)){ 
-library(postGGIR)
+library(mMARCH.AC)
 J_Est<-NULL
 try(J_Est <- jive.predict2(jive.data.norm, res))
 }
@@ -278,15 +301,14 @@ Jscore <- cbind(paste("JScore_Joint", 1:nrow(J_Est$joint.scores),sep="_"),J_Est$
 for (k in 1:3) {
   temp<- J_Est$indiv.scores[[k]]   
   temp2<-cbind(paste("JScore",domainName[k],1:nrow(temp),sep="_"),temp)
-  Jscore <- rbind(Jscore,temp2)
-  print(dim(Jscore))
+  Jscore <- rbind(Jscore,temp2) 
 } 
 colnames(Jscore)<-c("JScore",jive.filenames) 
 rownames(Jscore)<-Jscore[,1] 
 Jscore2<-cbind(filename=jive.filenames,t(Jscore[,-1])) 
 write.csv(Jscore2,file=scoreOutFN,row.names=F) 
 # Jscore[,1:5]
-print(paste(c("Get Jive Score with dim=",dim(Jscore)),collapse="  "))
+# print(paste(c("Get Jive Score with dim=",dim(Jscore)),collapse="  "))
 }
 
 ```
@@ -296,7 +318,7 @@ print(paste(c("Get Jive Score with dim=",dim(Jscore)),collapse="  "))
 if (is.list(J_Est)){  
 try(showPCA(res,n_joint=2,Colors= 'purple') )  
 try(showPCA(res,n_joint=1,n_indiv=c(1,1,1),Colors='purple') ) 
-pca.message<-"Get PCA plots for jont and individual scores"
+pca.message<-paste("Get PCA plots for jont and individual scores (dim=",dim(Jscore)[1], " X ",dim(Jscore)[2],")",sep="")
 } else {pca.message<-"Errors: R jive.predict fails to compute JIVE scores" }
 ``` 
 
@@ -324,5 +346,5 @@ pca.message<-"Get PCA plots for jont and individual scores"
 
 How to run this? 
 
-cd /data/guow4/project0/GGIR/postGGIR/postGGIR_compile/postGGIR3.0/inst/extdata/example/afterGGIR   
-R -e "rmarkdown::render('part7d_Example_postGGIR_JIVE_4_outputReport.Rmd'   )" 
+cd /data/guow4/project0/GGIR/postGGIR/postGGIR_compile/v2/example/afterGGIR   
+R -e "rmarkdown::render('module7c_Example_runJIVE.Rmd'   )" 

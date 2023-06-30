@@ -55,8 +55,8 @@ ActExtendCosinor2 = function(
 
   # Stage 1 ---- Cosinor Model
   tmp.dat = data.frame(time = rep(1:dim, n.days) / (n60/window), Y = x)
-  print(dim(tmp.dat))
-  print(head(tmp.dat))
+  #print(dim(tmp.dat))
+  #print(head(tmp.dat))
   fit = cosinor.lm(Y ~ time(time) + 1, data = tmp.dat, period = 24)
 
   mesor = fit$coefficients[1]
@@ -148,10 +148,12 @@ fn_obj = function(par, tmp.dat) {
 #' The first two columns have to be ID and Day. ID can be
 #' either \code{character} or \code{numeric}. Day has to be \code{numeric} indicating
 #' the sequence of days within each subject.
-#' @param window The calculation needs the window size of the data. E.g window = 1 means each epoch is in one-minute window.
+#' @param window \code{numeric} The calculation needs the window size of the data. E.g window = 1 means each epoch is in one-minute window.
 #' window size as an argument.
-#' @param lower A numeric vector of lower bounds on each of the five parameters (in the order of minimum, amplitude, alpha, beta, acrophase) for the NLS. If not given, the default lower bound for each parameter is set to \code{-Inf}.
-#' @param upper A numeric vector of upper bounds on each of the five parameters (in the order of minimum, amplitude, alpha, beta, acrophase) for the NLS. If not given, the default lower bound for each parameter is set to \code{Inf}
+#' @param lower \code{numeric} A numeric vector of lower bounds on each of the five parameters (in the order of minimum, amplitude, alpha, beta, acrophase) for the NLS. If not given, the default lower bound for each parameter is set to \code{-Inf}.
+#' @param upper \code{numeric} A numeric vector of upper bounds on each of the five parameters (in the order of minimum, amplitude, alpha, beta, acrophase) for the NLS. If not given, the default lower bound for each parameter is set to \code{Inf}
+#' @param daylevel  \code{logical}  If the cosinor model was run for day-level data. The default value is FALSE while the activity data for all days were used for model fitting. When the value is TRUE, the single day data were used for model fitting.
+#'
 #'
 #' @importFrom stats na.omit reshape
 #' @importFrom dplyr group_by %>% do
@@ -177,10 +179,12 @@ ActExtendCosinor_long2 = function(
   count.data,
   window = 1,
   lower = c(0, 0, -1, 0, -3), ## min, amp, alpha, beta, phi
-  upper = c(Inf, Inf, 1, Inf, 27)
+  upper = c(Inf, Inf, 1, Inf, 27),
+  daylevel = FALSE
 ){
-  ID = value = . = NULL
-  rm(list = c("ID", "value", "."))
+  ID = Day = value = . = NULL 
+
+  rm(list = c("ID","Day", "value", "."))
 
   long.count = reshape(count.data, varying = names(count.data)[3:ncol(count.data)],direction = "long",
                        timevar = "Time",idvar = c("ID","Day"),v.names = "values",new.row.names = c(1:((ncol(count.data)-2)*nrow(count.data))))
@@ -188,9 +192,12 @@ ActExtendCosinor_long2 = function(
     with(long.count, order(ID, Day,Time)),
   ]
 
-  n1440=ncol(count.data)-2     
-  result= long.count  %>% group_by(ID) %>% do(out = ActExtendCosinor2(.$values,
-                                                               window = window, lower = lower, upper = upper, n1440=n1440))
+  n1440=ncol(count.data)-2   
+  if (!daylevel)  result= long.count  %>% group_by(ID) %>% do(out = ActExtendCosinor2(.$values,
+                                window = window, lower = lower, upper = upper, n1440=n1440))
+
+  if (daylevel) result= long.count  %>% group_by(ID,Day) %>% do(out = ActExtendCosinor2(.$values,
+                                window = window, lower = lower, upper = upper, n1440=n1440))
 
   out = unlist(result$out)
 
@@ -207,7 +214,8 @@ ActExtendCosinor_long2 = function(
 
 
   result$out = NULL
-  names(result)[3:11] = paste0(names(result)[3:11],"_",window)
+  last9c<-(ncol(result)-8):ncol(result) 
+  names(result)[last9c] = paste0(names(result)[last9c],"_",window)
   return(result)
 
 }

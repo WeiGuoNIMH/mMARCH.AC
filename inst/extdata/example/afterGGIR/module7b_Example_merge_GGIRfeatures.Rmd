@@ -1,7 +1,7 @@
 ---
-title: 'Extracts features from minute level actigraphy data '
+title: 'mMARCH.AC module 7b: Extracts features from minute level actigraphy data '
 author: "Wei Guo"
-date: "2021-02-19"
+date: "2022-09-20"
 output:
   html_document:
     df_print: paged
@@ -33,7 +33,7 @@ Reference
  
         They analyse a total of eight accelerometer-based measures of sleep and activity timing. These include measures representative of 
            + (1) sleep quality, including sleep efficiency (sleep duration divided by the time between the start and end of the first and last nocturnal inactivity period, respectively) and 
-           + (2 "Nblocks_nightsleep") the number of nocturnal sleep episodes. 
+           + (2) "Nblocks_nightsleep", the number of nocturnal sleep episodes. 
            + (3) timing of sleep midpoint, 
            + (4) timing of the least-active 5 h (L5), defined as the midpoint of the least-active 5h of each day.
            + (5) timing of the most-active 10 h (M10)), and 
@@ -45,16 +45,16 @@ Reference
 
 
 ```{r changeEveryStudy,include=FALSE  }
-currentdir="/data/guow4/project0/GGIR/postGGIR/postGGIR_compile/postGGIR3.0/inst/extdata/example/afterGGIR"
+currentdir="/data/guow4/project0/GGIR/postGGIR/postGGIR_compile/v2/example/afterGGIR"
 studyname="Example"
 bindir=""
-outputdir="/data/guow4/project0/GGIR/postGGIR/postGGIR_compile/postGGIR3.0/inst/extdata/example/GGIR/output_binfile"
+outputdir="/data/guow4/project0/GGIR/postGGIR/postGGIR_compile/v2/example/GGIR/output_binfile"
 epochIn=5
-epochOut=5
-flag.epochOut=60
+epochOut=60
+epochOut=60
 log.multiplier=9250
-QCnights.feature.alpha=c(0,0)
-part5FN="WW_L50M100V400_T5A5"
+QCnights.feature.alpha=c(0,0,0,0)
+part5FN="WW_L50M125V500_T5A5"
 setwd(currentdir)
 ```
 
@@ -70,25 +70,28 @@ setwd(currentdir)
 
 ```{r c1head ,include=FALSE}
 #---------------------------------main-body--------------------------------------- 
-
-foutFN<-function(x,studyname) paste("part7a_",studyname,"_some_features_page",x,".csv",sep="")   
+ 
+foutFN<-function(x,studyname) paste("module7a_",studyname,"_new_features_page",x,".csv",sep="")   
 page1<-read.csv(foutFN("1_features",studyname),nrow=100,head=1,stringsAsFactors=F)
 S1<-which(colnames(page1)=="SubjectLevel")+1
 page1.subjectlevel<-colnames(page1)[S1:ncol(page1)] 
 subjectlevel<-c(page1.subjectlevel, paste("PC",1:20,sep="")) 
 
  
-outFN<-paste("part7b_",studyname,"_all_features_",1:9,".csv",sep="")
-outFN.anno<-paste("part7_",studyname,"_all_features_dictionary.xlsx",sep="") 
+outFN<-paste("module7b_",studyname,"_all_features_",1:4,c("_day","_dayclean","_subject","_subjectSD"),".csv",sep="")
+outFN.anno<-paste("module7_",studyname,"_all_features_dictionary.xlsx",sep="") 
   
 library(xlsx)   
 library(knitr) 
-library(postGGIR)
+library(mMARCH.AC)
+library(dplyr)
+library(kableExtra)
  
 setwd(currentdir) 
 
-feaFN<-system.file("template", "features.dictionary.xlsx", package = "postGGIR")  
-system(paste("cat ",feaFN," > ",outFN.anno,sep=""))
+feaFN<-system.file("template", "features.dictionary.xlsx", package = "mMARCH.AC")  
+# system(paste("cat ",feaFN," > ",outFN.anno,sep=""))
+file.copy(from=feaFN, to=outFN.anno, overwrite = TRUE)
 ```
 
 # 1 Read R features  
@@ -112,23 +115,27 @@ inFN2<-c("part2_summary",
          "part4_summary_sleep_cleaned",
          "part4_nightsummary_sleep_cleaned",
           paste("part5_",c("personsummary","daysummary"),"_",part5FN,sep="") )  
-inFN3<-paste(data.dir2,"/",inFN2,".csv",sep="") 
-
+inFN3<-paste(data.dir2,"/",inFN2,".csv",sep="")  
+sleepFull.fn<-paste(outputdir,"/results/QC/part4_nightsummary_sleep_full.csv",sep="")  
+sleepFull<-read.csv(sleepFull.fn,head=1,stringsAsFactors=F)  
 ```
 
 ```{r dict,echo=FALSE}
-dict<-read.xlsx(outFN.anno,head=1,sheetName="dictionary",stringsAsFactors=F)
+dict<-read.xlsx(outFN.anno,head=1,sheetName="dictionary",stringsAsFactors=F) 
+dict<-dict[which(!is.na(dict[,"Domain"])),]
 
 SLdomain<-dict[which(dict[,"Domain"]=="SL"),"Variable"] 
 PAdomain<-dict[which(dict[,"Domain"]=="PA"),"Variable"] 
 CRdomain<-dict[which(dict[,"Domain"]=="CR"),"Variable"] 
 
-part2<-dict[which(dict[,"Source"]=="part2"),"Variable"] #9/1 IV and IS
-part4<-dict[which(dict[,"Source"]=="part4"),"Variable"]
-part6<-dict[which(dict[,"Source"]=="part5"),"Variable"]
-partR<-dict[which(dict[,"Source"]=="R"),"Variable"]
+part2<-dict[which(dict[,"Source"]=="GGIR-part2"),"Variable"] #9/1 IV and IS
+part4<-dict[which(dict[,"Source"]=="GGIR-part4"),"Variable"]
+part6<-dict[which(dict[,"Source"]=="GGIR-part5"),"Variable"]
+partR<-dict[which(dict[,"Source"]=="mMARCH.AC"),"Variable"]
 
-kable(dict[,2:5])
+kable(dict[,2:5]) %>%
+    kable_styling(bootstrap_options = c("striped", "hover"))
+
 table(dict[,"Source"])
 ```
 
@@ -162,12 +169,14 @@ d4[,"calendardate"]<- format(as.Date(d4[,"calendardate"],"%d/%m/%Y"), "%Y-%m-%d"
 
 ##################################################### 
 # 1.2 sleep variables for PA domain
- 
+# adjust part5ww to match and extract features such as N_atleast5minwakenight,ACC_spt_sleep_mg and dur_day_total_IN_min....
+# difficulty: part5mm not right in date, part5ww has duplicate dates. 
+
 fixDup<-function(part5ww,part4){ #fix duplicates in part5ww
 
 # Note: part4= 25/2/2016, but part5=2016-02-26.
 
-
+length(which(is.na(part5ww[,"calendar_date"]))) 
 part5ww[,"calendar_date_old"]<-part5ww[,"calendar_date"]
 id5w<-paste(part5ww[, "filename"],part5ww[, "calendar_date"],sep="@")   
 dupid<-id5w[which(duplicated(id5w))] 
@@ -175,10 +184,14 @@ dupid<-id5w[which(duplicated(id5w))]
 if (length(dupid)>=1){ 
 S1<-which(id5w %in% dupid)  
 for (i in  S1){
+# print(i)
 j<-which(part4[,"filename"]==part5ww[i,"filename"] & part4[,"sleeponset_ts"]==part5ww[i,"sleeponset_ts"] & part4[,"wakeup_ts"]==part5ww[i,"wakeup_ts"] )
 if (length(j)==1) part5ww[i,"calendar_date"]<-as.character(as.Date(part4[j,"calendar_date"],format="%d/%m/%Y")) 
-if (length(j)==0)  part5ww[i,"calendar_date"]<-NA
-if (length(j)>=2)  stop("Please check you data, found duplicate sleeponset and wakeup") 
+if (length(j)==0)  part5ww[i,"calendar_date"]<-NA #no match in part4
+if (length(j)>=2)  {j2<- which.min(abs(as.Date(part4[j,"calendar_date"],format="%d/%m/%Y")-as.Date(part5ww[i,"calendar_date"],format="%Y-%m-%d")) )
+                    part5ww[i,"calendar_date"]<-as.character(as.Date(part4[j2,"calendar_date"],format="%d/%m/%Y"))
+                    print(paste("Found duplicate sleeponset and wakeup on ",id5w[i],", so use the closest day",sep="")) 
+                   } 
 } 
 change<-part5ww[S1, c("filename","calendar_date","sleeponset_ts","wakeup_ts", "calendar_date_old")] 
 } else change<-"NO duplicate days" 
@@ -191,8 +204,8 @@ ans<-list(data=part5ww,note=change,N=length(which(duplicated(id5w)))  )
 return(ans)
 }
 
-
-t<-fixDup(part5ww=D[[6]],part4=D[[4]])
+ 
+t<-fixDup(part5ww=D[[6]],part4=sleepFull)
 data<-t$data  #D[[6]] #part5 daysummary
 S2a<-which(data[,"cleaningcode"]>=2) #If the study did not propose a sleep log to the individuals, then all nights are removed with cleaningcode higher than 1.
 S2b<-which(colnames(data) %in% intersect(part6,SLdomain))
@@ -222,7 +235,9 @@ if (length(miss)>=1) d2<-d2[-miss,]
  
 **Note 1: `r inFN2[6]` had `r t$N` duplicate days**
 ```{r,echo=F}
-if (t$N>=1) kable(t$note,caption="Duplicate days Correction according to part4") 
+if (t$N>=1) kable(t$note,caption="Duplicate days Correction according to part4")  %>%
+    kable_styling(bootstrap_options = c("striped", "hover"))
+
 ```
 # 
 **Note 2: Cleaningcode in GGIR part4 and part5; Set sleep feature=NA for Cleaningcode>=2 (freq=`r length(S2a)` nights)**   
@@ -366,7 +381,9 @@ cleancode2: number of missingness of features of each subject
 
 
 ```{r,echo=F}
-if (nrow(Fmer8.bad)>=1) kable(Fmer8.bad,caption="N valid night of removed subjects for mean features")
+if (nrow(Fmer8.bad)>=1) kable(Fmer8.bad,caption="N valid night of removed subjects for mean features")  %>%
+    kable_styling(bootstrap_options = c("striped", "hover"))
+
 ```
 
 #
@@ -400,7 +417,9 @@ write.csv(Fmer9, file=outFN[4],row.names = FALSE )
  
 
 ```{r,echo=F}
-if (nrow(Fmer9.bad)>=1) kable(Fmer9.bad,caption="N valid night of removed subjects for SD features") 
+if (nrow(Fmer9.bad)>=1) kable(Fmer9.bad,caption="N valid night of removed subjects for SD features")  %>%
+    kable_styling(bootstrap_options = c("striped", "hover"))
+
 ```
 
 #
@@ -431,11 +450,13 @@ colnames(ansM)<-c("Filename","Description","Nrow","Ncol","Nsubjects","Removed Su
 ```
 
 ```{r chunk6,echo=FALSE}
-kable(ansM,caption="Description of output files")   
+kable(ansM,caption="Description of output files")   %>%
+    kable_styling(bootstrap_options = c("striped", "hover"))
+ 
 ```
 
 #
-**Note. In the output of part7b_1, the day summary files include either**   
+**Note. In the output of module7b_1, the day summary files include either**   
 
   (1) activity data TAC etc for cleaned data only  
   (2) sleep features from part4_clean file, set to be missing when cleaningcode>1 from part5
@@ -450,8 +471,22 @@ t2<-pheno.plot(inputFN=outFN[3],csv=TRUE, start=4)
 
 ```
 ```{r,echo=FALSE,warning=FALSE, message=FALSE} 
-kable(t1,caption=paste("Summary of features (",outFN[2],")",sep=""))  
+kable(t1,caption=paste("Summary of features (",outFN[2],")",sep=""))   %>%
+    kable_styling(bootstrap_options = c("striped", "hover"))
+
 ```
+ 
+
+Some annotation variables in the output
+
+Variable | Meaning
+--------------|----------------------------------
+zeroSleep | sleeponset= wakup 
+Nwd | number of weekdays
+Nwe | number of weekends
+Nwd_0s |	number of  zero sleep in weekdays  
+Nwe_0s |	number of zero sleep in weekends  
+cleancode2 | number of NAs in the feature table 
  
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -459,5 +494,5 @@ kable(t1,caption=paste("Summary of features (",outFN[2],")",sep=""))
 
 How to run this? 
    
-cd /data/guow4/project0/GGIR/postGGIR/postGGIR_compile/postGGIR3.0/inst/extdata/example/afterGGIR   
-R -e "rmarkdown::render('part7b_Example_postGGIR_JIVE_2_allfeatures.Rmd'   )" 
+cd /data/guow4/project0/GGIR/postGGIR/postGGIR_compile/v2/example/afterGGIR   
+R -e "rmarkdown::render('module7b_Example_merge_GGIRfeatures.Rmd'   )" 

@@ -66,6 +66,7 @@ if (length(S1)>=1) reportSleep.gt48<- sleepMatrixH[S1,] else  reportSleep.gt48<-
   # remove wakeup>48, sleep for two days
   # if no impute, missing data was set to be 0 as wake time
   # add last day since sleep indexed today and next day.
+  #  sleepMatrixH:  "filename"  "Date"  "daysleeper" "sleeponset" "wakeup""oldDate"  "problem",sleepwindow
 
 quantile(sleepMatrixH[,"sleeponset"],na.rm=T)
 quantile(sleepMatrixH[,"wakeup"],na.rm=T) 
@@ -75,20 +76,29 @@ filelist<-unique(sleepMatrixH[,"filename"])
 outputsleepMatrixH<-NULL
 outputsleepMatrixT<-NULL
 
+mypaste<-function(a,b,sep=",") {
+if (length(a)==0 | length(a)>=1 && (is.na(a) | a=="")) c=b else c<-paste(a,b,sep=sep) 
+return(c)
+}
+
+
 for (f in 1:length(filelist)){
 
-work<-sleepMatrixH[which(sleepMatrixH[,"filename"]==filelist[f]),]
+work<-sleepMatrixH[which(sleepMatrixH[,"filename"]==filelist[f]), ] #8 columns
 sleeponset.impute<-ifelse(impute, mean(work[,"sleeponset"]),NA)
 wakeup.impute<-ifelse(impute, mean(work[,"wakeup"]),NA)
  
-firstday<-c(work[1,1],as.character(as.Date(work[1,"Date"] )-1),0,sleeponset.impute,wakeup.impute,as.character(as.Date(work[1,"oldDate"] )-1))
-lastday<-c(work[nrow(work),1],as.character(as.Date(work[nrow(work),"Date"] )+1),0,sleeponset.impute,wakeup.impute,as.character(as.Date(work[nrow(work),"oldDate"] )+1))
+firstday<-c(work[1,1],as.character(as.Date(work[1,"Date"] )-1),0,sleeponset.impute,wakeup.impute,as.character(as.Date(work[1,"oldDate"] )-1), NA,"")
+lastday<-c(work[nrow(work),1],as.character(as.Date(work[nrow(work),"Date"] )+1),0,sleeponset.impute,wakeup.impute,as.character(as.Date(work[nrow(work),"oldDate"] )+1),NA,"")
+
 work2<-rbind(firstday,work,lastday)
+
+# print(c(f,dim(work),length(firstday)))
 
  
 tempsleepMatrixT<-array(0,dim=c(nrow(work2),n1440))
 for (i in 1:nrow(work2)){
-# print(i)
+ 
 start = as.numeric(work2[i,"sleeponset"])
 end = as.numeric(work2[i,"wakeup"])
 
@@ -107,17 +117,17 @@ end3<-floor(end2*3600/epochOut)
 # Define sleep intervals based on sleeponset and wakeup: 
 if (start<24 & end<24) {
 tempsleepMatrixT[today,start3:end3]<-1
-work2[today,"sleepwindow"]<-paste(work2[today,"sleepwindow"],paste(start3,end3,sep="~") ,sep=",") }
+work2[today,"sleepwindow"]<-mypaste(work2[today,"sleepwindow"],paste(start3,end3,sep="~") ,sep=",") }
 
 if (start>24 & end>24) {
 tempsleepMatrixT[nextday,start3:end3]<-1 
-work2[nextday,"sleepwindow"]<-paste(work2[nextday,"sleepwindow"],paste(start3,end3,sep="~") ,sep=",")}
+work2[nextday,"sleepwindow"]<-mypaste(work2[nextday,"sleepwindow"],paste(start3,end3,sep="~") ,sep=",")}
 
 if (start<24 & end>24) { 
 tempsleepMatrixT[today,start3:n1440]<-1 
 tempsleepMatrixT[nextday,1:end3]<-1
-work2[today,"sleepwindow"]<-paste(work2[today,"sleepwindow"],paste(start3,n1440,sep="~") ,sep=",") 
-work2[nextday,"sleepwindow"]<-paste(work2[nextday,"sleepwindow"],paste(1,end3,sep="~") ,sep=",") }  
+work2[today,"sleepwindow"]<-mypaste(work2[today,"sleepwindow"],paste(start3,n1440,sep="~") ,sep=",") 
+work2[nextday,"sleepwindow"]<-mypaste(work2[nextday,"sleepwindow"],paste(1,end3,sep="~") ,sep=",") }  
 } #if wakeup<48 
 } #end ith row
 
@@ -131,16 +141,14 @@ outputsleepMatrixT<-rbind(outputsleepMatrixT,tempsleepMatrixT[-1,])
 dim(sleepMatrixH)
 length(filelist)
 dim(outputsleepMatrixH) 
-dim(outputsleepMatrixT)
+dim(outputsleepMatrixT) 
  
- 
-
-# 3) nonsleep =1-sleep
  
 colnames(outputsleepMatrixT)<- paste("MIN",1:n1440,sep="")  
 outputsleepMatrix.all<-cbind(outputsleepMatrixH,outputsleepMatrixT)   
 write.csv(outputsleepMatrix.all,file=outputFN,row.names=FALSE)
-  
+ 
+# this is the sleep matrix. Build awake matrix later based on activity matrix IDs. 
 return(list(duplicatedays=reportSleep.dup, sleepproblem= reportSleep.gt48))
 }
 

@@ -4,12 +4,12 @@
 \alias{data.imputation}
 \title{Data imputation for the cleaned data with annotation}
 \usage{
-data.imputation(workdir, csvInput)
+data.imputation(workdir, csvInput = NULL)
 }
 \arguments{
 \item{workdir}{\code{character} Directory where the output needs to be stored. Note that this directory must exist.}
 
-\item{csvInput}{\code{character} File name with or without directory for sample information in CSV format. The ENMO data will be read through read.csv(csvInput,header=1) command, and the missing values were imputated by the average ENMO over all the valid days for each subject at each time point. In this package, csvInput =  flag_All_studyname_ENMO.data.Xs.csv.}
+\item{csvInput}{\code{character} File name with or without directory for sample information in CSV format. The ENMO data will be read through read.csv(csvInput,header=1) command, and the missing values were imputated by the average ENMO over all the valid days for each subject at each time point. In this package, csvInput =  flag_All_studyname_ENMO.data.Xs.csv.  If csvInput=NULL, all available data from module 3 will be imputed.}
 }
 \value{
 Files were written to the specified sub-directory, named as impu.flag_All_studyname_ENMO.data.Xs.csv, which Xs is the epoch size to which acceleration was averaged (seconds) in GGIR output.  This excel file includs the following columns,

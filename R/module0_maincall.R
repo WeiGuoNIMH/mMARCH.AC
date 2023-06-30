@@ -18,10 +18,11 @@
 #' @param QCnights.feature.alpha  \code{number}  Minimum required number of valid nights in day specific mean, SD, weekday mean and weekend mean analysis as a quality control step in the JIVE analysis. Default is  c(0,0,0,0), i.e. no additional data cleaning in this step.   
 #' @param DoubleHour  \code{character}  Specify the method of processing the double hours for days that daylight saving time starts and ends for example. In detail, DoubleHour = c("average","earlier","later"). The acceleration data was averaged on double hours when DoulbeHour="average". Only the acceleration data in the earlier occurrence was remained for double hours while the other duplicate data were ignored when DoulbeHour="earlier". Only the acceleration data in the later occurrence was remained for double hours while the other duplicate data were ignored when DoulbeHour="later".  Default is "average". 
 #' @param QC.sleepdur.avg \code{number}  As taking the deault value of QC.sleepdur.avg=c(3,12), individuals were excluded with an average sleep duration <3 hour or >12 hour.  
-#' @param QC.nblocks.sleep.avg \code{number}  As taking the deault value of QC.nblocks.sleep.avg=c(5,30), individuals were excluded with an average number of nocturnal sleep episodes <5 or >30.  
+#' @param QC.nblocks.sleep.avg \code{number}  As taking the deault value of QC.nblocks.sleep.avg=c(6,29), individuals were excluded with an average number of nocturnal sleep episodes < 6 or > 29.  
 #' @param Rversion \code{character}  R version, eg. "R/3.6.3". Default is "R". 
 #' @param filename2id  \code{R function}  User defined function for converting filename to sample IDs. Default is NULL.  
-#' @param PA.threshold  \code{number}  Threshold for light, moderate and vigorous physical activity. Default is c(50,100,400).
+#' @param PA.threshold  \code{number}  Threshold for light, moderate and vigorous physical activity. Default is c(40,100,400).
+#' @param PA.threshold2  \code{number}  Second threshold for light, moderate and vigorous physical activity. Default is c(50,100,400). The activity features will end with "_C2" for those that were calculated based on PA.threshold2.
 #' @param desiredtz \code{charcter}  desired timezone: see also http://en.wikipedia.org/wiki/Zone.tab. Used in g.inspectfile(). Default is "US/Eastern". Used in g.inspectfile() function to inspect acceleromether file for brand, sample frequency in module 2. 
 #' @param RemoveDaySleeper  \code{logical}  Specify if the daysleeper nights are removed from the calculation of number of valid days for each subject. Default is FALSE. 
 #' @param part5FN   \code{character}  Specify which output is used in the GGIR part5 results. Defaut is "WW_L50M100V400_T5A5", which means that part5_daysummary_WW_L50M100V400_T5A5.csv and part5_personsummary_WW_L50M100V400_T5A5.csv are used in the analysis. 
@@ -52,21 +53,25 @@
 
 
 
-mMARCH.AC.maincall<-function(mode,useIDs.FN=NULL,currentdir,studyname,bindir=NULL, outputdir, epochIn=5, epochOut=60,log.multiplier=9250,use.cluster=TRUE,QCdays.alpha=7,QChours.alpha=16,QCnights.feature.alpha=c(0,0),  DoubleHour=c("average","earlier","later")[1], QC.sleepdur.avg=c(3,12),QC.nblocks.sleep.avg=c(5,30), Rversion="R", filename2id=NULL, PA.threshold=c(50,100,400), desiredtz="US/Eastern", RemoveDaySleeper=FALSE, part5FN="WW_L50M100V400_T5A5", NfileEachBundle=20, holidayFN=NULL,trace=FALSE){
+mMARCH.AC.maincall<-function(mode,useIDs.FN=NULL,currentdir,studyname,bindir=NULL, outputdir, epochIn=5, epochOut=60,log.multiplier=9250,use.cluster=TRUE,QCdays.alpha=7,QChours.alpha=16,QCnights.feature.alpha=c(0,0,0,0),  DoubleHour=c("average","earlier","later")[1], QC.sleepdur.avg=c(3,12),QC.nblocks.sleep.avg=c(6,29), Rversion="R", filename2id=NULL, PA.threshold=c(40,100,400), PA.threshold2=c(50,100,400),desiredtz="US/Eastern", RemoveDaySleeper=FALSE, part5FN="WW_L50M100V400_T5A5", NfileEachBundle=20, holidayFN=NULL,trace=FALSE){
 
-print(paste("mode=",mode,sep="")) 
-print(paste("useIDs.FN=",useIDs.FN,sep="")) 
-print(paste("log.multiplier=",log.multiplier,sep="")) 
-print(paste("use.cluster=",use.cluster,sep=""))  
+
+# note for sleep clean: Jones et al cleaned sleep data based on Nblocks of sleep and durations of sleep by removing sleep features for individuals with an average sleep duration <3 h or >12 h or with an average number of nocturnal sleep episodes =5 or =30.  Apply to JIVE (part 7c) after subject-avg feature were calculated.
+
+message(paste("mode=",mode,sep="")) 
+message(paste("useIDs.FN=",useIDs.FN,sep="")) 
+message(paste("log.multiplier=",log.multiplier,sep="")) 
+message(paste("use.cluster=",use.cluster,sep=""))  
 
   
 setwd(currentdir) 
 on.exit(setwd(currentdir))
-#require(xlsx)
-  
+ # require(xlsx)
+ # requireNamespace(xlsx)
+
 #-------------newfill------------------------ 
 nf<- length( list.files(paste(outputdir,"/meta/basic",sep="") ,recursive=TRUE) )
-print(paste("There are ",nf," files in /basic folder in total",sep=""))
+message(paste("There are ",nf," files in /basic folder in total",sep=""))
 writedir="data" #for merge csv 
 
 # if use.cluster=TRUE, submit data transform to cluster
@@ -82,39 +87,42 @@ Vnames<-toupper(colnames(read.csv(csvdata[1],header=1,nrow=10))[-1])
 ######################################################################### 
 # (0) check input files 
 ######################################################################### 
-if (mode>=1){
-print("0: Check input files for module1, module2 and module7................")
+if (mode==1 | mode==2){
+message("")
+message("To run mMARCH.AC, you need input some GGIR outputs for module1, module2 and module7................")
+if (nf==0) warning(paste("No files were found in GGIR foldes: ",outputdir,"/meta/basic",sep=""))
+if (length(csvdata)==0) warning(paste("No csv files were found in GGIR foldes: ",outputdir,"/meta/csv",sep=""))
+
 p1.files<-paste(outputdir,c("/meta/basic", "/meta/csv"),sep="") 
 p2.files<-c(paste(outputdir,"/results/", c( "part2_daysummary", "part4_nightsummary_sleep_cleaned",
           paste("part5_daysummary" ,"_",part5FN,sep="")),".csv",sep=""),   
           paste(outputdir,"/results/QC/part4_nightsummary_sleep_full.csv", sep="")  ) 
 for (i in 1:length(p1.files)) {
    nfiles<-length(list.files(path=p1.files[i]))
-   print(paste(i,": Found ",nfiles," input files in ",p1.files[i],sep=""))
+   message(paste(i,": Found ",nfiles," input files in ",p1.files[i],sep=""))
 }
 for (i in 1:length(p2.files)){
    nfiles<-file.exists(p2.files[i])
-   print(paste(i+length(p1.files),": ",ifelse(nfiles,"Found","Miss")," input files of ",p2.files[i],sep=""))
+   message(paste(i+length(p1.files),": ",ifelse(nfiles,"Found","Miss")," input files of ",p2.files[i],sep=""))
 } 
 
-if (!is.null(holidayFN) && file.exists(holidayFN) ) print(paste("7: Found holdiday file of ",holidayFN, sep="")) 
+if (!is.null(holidayFN) && file.exists(holidayFN) ) message(paste("7: Found holdiday file of ",holidayFN, sep="")) 
 
 
 part4<-read.csv(p2.files[2],header=1,stringsAsFactors=F)  
            idsdate<-paste(part4[, "filename"],part4[,"calendar_date"],sep=" ")
            idsdate<-idsdate[duplicated(idsdate)] 
-           if (length(idsdate)>=1 )  print(paste("8 Warning: found duplicate days in part4_nightsummary_sleep_cleaned data as follows",idsdate,sep=","))  
+           if (length(idsdate)>=1 )  message(paste("8 Warning: found duplicate days in part4_nightsummary_sleep_cleaned data as follows",idsdate,sep=","))  
 
 
-print("################## End input checking #################")
+message("################## End input checking #################")
 }
 ######################################################################### 
 # (1a) merge csv by parallel computing 
 ######################################################################### 
 
 if (0 %in% mode  & use.cluster){
-Rline<-c(
-"options(width=2000) ",
+Rline<-c( 
 "argv = commandArgs(TRUE);  ", 
 "print(argv) ", 
 "print(paste(\"length=\",length(argv),sep=\"\"))  ", 
@@ -131,10 +139,11 @@ paste("writedir <- \"",writedir,"\"",sep=""),
 paste("epochIn <- ",epochIn, sep=""), 
 paste("epochOut <- ",epochOut, sep=""), 
 paste("currentdir <- \"",currentdir,"\"",sep=""),  
+paste("DoubleHour <- \"",DoubleHour,"\"",sep=""), 
 "#################################################",
  
 "setwd(currentdir)",
-"ggir.datatransform(outputdir=outputdir,subdir=writedir,studyname=studyname, numericID=FALSE,sortByid=\"filename\",f0,f1,epochIn=epochIn,epochOut=epochOut,mergeVar=mergeVar)"
+"ggir.datatransform(outputdir=outputdir,subdir=writedir,studyname=studyname, numericID=FALSE,sortByid=\"filename\",f0,f1 ,epochOut=epochIn,DoubleHour=DoubleHour,mergeVar=mergeVar)"
 )
 swline<-paste("# swarm -g 70 -f ",swFN," --module R --time=50:00:00",sep="")
 for (i in 1:ceiling(nf/nfeach)) 
@@ -149,18 +158,18 @@ write(Rline,file= Rline.swFN,ncolumns=1)
 write(swline,file=  swFN,ncolumns=1)
 write(catlines,file=swFN2,ncolumns=1) 
  
-print("You need to submit your swarm file to a cluster before running other modes")
+message("You need to submit your swarm file to a cluster before running other modes")
 }
 
 #########################################################################  
 # (1b) csv data transformation 
 ######################################################################### 
 if (1 %in% mode  & !use.cluster){
-print("# (1b) csv data transformation without using cluster---------------------------")
-print(paste("workdir=",getwd(),sep="")) 
+message("# (1b) csv data transformation without using cluster---------------------------")
+message(paste("workdir=",getwd(),sep="")) 
 ggir.datatransform(outputdir,subdir=writedir,studyname, numericID=FALSE,sortByid="filename",f0=1,f1=9999,epochIn ,epochOut=epochIn,DoubleHour=DoubleHour,mergeVar=1)
  
-print(paste("workdir=",getwd(),sep="")) 
+message(paste("workdir=",getwd(),sep="")) 
 ggir.datatransform(outputdir,subdir=writedir,studyname, numericID=FALSE,sortByid="filename",f0=1,f1=9999,epochIn ,epochOut=epochIn,DoubleHour=DoubleHour,mergeVar=2)
  
 
@@ -174,36 +183,34 @@ for (i in 1:length(Vnames)) try(system(catlines[i]))
 if (is.null(part5FN)) part5FN=paste("WW_L",PA.threshold[1],"M",PA.threshold[2],"V",PA.threshold[3],"_T5A5",sep="") #MM 11062020 #WW 12/11
 
 if (2 %in% mode ){
-print("# (2a) Get summary of ggir output---------------------------") 
+message("# (2a) Get summary of ggir output---------------------------") 
  
-ggir.summary(bindir,outputdir,studyname,numericID=FALSE,sortByid="filename",subdir="summary",part5FN=part5FN,QChours.alpha=,QChours.alpha,filename2id=filename2id,desiredtz=desiredtz,trace=trace)
-print(" Message: please check duplicate ids and make a csv file (duplicate=remove)") 
+ggir.summary(bindir=bindir,outputdir=outputdir,studyname=studyname,numericID=FALSE,sortByid="filename",subdir="summary",part5FN=part5FN,QChours.alpha=QChours.alpha,filename2id=filename2id,desiredtz=desiredtz,trace=trace)
+message(" Message: please check duplicate ids and make a csv file (duplicate=remove)") 
  
-print("# (2b) plot nonwear vs n.valid.hours---------------------------")
-print(" please make sure you have only one NonWear.data*.csv in the data folder") 
-call.after.plot(studyname,outputdir,workdir= paste(currentdir,"/",writedir,sep=""),epochOut,trace) 
+message("# (2b) plot nonwear vs n.valid.hours---------------------------")
+message(" please make sure you have only one NonWear.data*.csv in the data folder") 
+call.after.plot(studyname=studyname,outputdir=outputdir,workdir= paste(currentdir,"/",writedir,sep=""),epochOut=epochOut,trace=trace) 
 }
 #########################################################################  
 # (3) data Shrink
 #  output= flag_All_studyname_ENMO.data.Xs.csv 
 ######################################################################### 
 if (3 %in% mode ){  
-print("# (3a) data clean for ANGLEZ---------------------------")
+message("# (3) data clean for ENMO,ANGLEZ, etc ---------------------------")
  
 summaryFN<-paste(currentdir,"/summary/part24daysummary.info.csv",sep="")
-DataShrink(studyname,outputdir,workdir= paste(currentdir,"/",writedir,sep=""),QCdays.alpha=QCdays.alpha,QChours.alpha=QChours.alpha,summaryFN,epochIn=epochIn,epochOut=epochOut,useIDs.FN=useIDs.FN, RemoveDaySleeper=RemoveDaySleeper,trace=trace,Step=1 )
-
-print("# (3b) data clean for ENMO---------------------------")
-DataShrink(studyname,outputdir,workdir= paste(currentdir,"/",writedir,sep=""),QCdays.alpha=QCdays.alpha,QChours.alpha=QChours.alpha,summaryFN,epochIn=epochIn,epochOut=epochOut,useIDs.FN=useIDs.FN,RemoveDaySleeper=RemoveDaySleeper,trace=trace,Step=2 )
+DataShrink(studyname,outputdir,workdir= paste(currentdir,"/",writedir,sep=""),QCdays.alpha=QCdays.alpha,QChours.alpha=QChours.alpha,summaryFN,epochIn=epochIn,epochOut=epochOut,useIDs.FN=useIDs.FN, RemoveDaySleeper=RemoveDaySleeper,trace=trace )
+ 
 }
 
 
 # mode=4: output=impu.flag_All_studyname_ENMO.data.60s.csv 
 if (4 %in% mode ){   
-print("# (4) data imputation ---------------------------") 
+message("# (4) data imputation ---------------------------") 
  
-csvInput<-paste("flag_All_",studyname,"_ENMO.data.",epochOut,"s.csv",sep="") 
-data.imputation(workdir= paste(currentdir,"/",writedir,sep=""), csvInput )  
+#  csvInput<-paste("flag_All_",studyname,"_ENMO.data.",epochOut,"s.csv",sep="") 
+data.imputation(workdir= paste(currentdir,"/",writedir,sep=""), csvInput=NULL )  
 }  
  
 #########################################################################  
@@ -226,6 +233,7 @@ L$log.multiplier_xxx<-paste("log.multiplier=",log.multiplier, sep="")
 L$QCdays.alpha_xxx<-paste("QCdays.alpha=",QCdays.alpha, sep="")   
 L$QChours.alpha_xxx<-paste("QChours.alpha=",QChours.alpha, sep="")  
 L$PA.threshold_xxx<-paste("PA.threshold=c(",paste(PA.threshold,collapse=","),")", sep="")  
+L$PA.threshold2_xxx<-paste("PA.threshold2=c(",paste(PA.threshold2,collapse=","),")", sep="")  
 L$QCnights.feature.alpha_xxx<-paste("QCnights.feature.alpha=c(",paste(QCnights.feature.alpha,collapse=","),")", sep="")      
 L$QC.sleepdur.avg_xxx<-paste("QC.sleepdur.avg=c(",paste(QC.sleepdur.avg,collapse=","),")", sep="")     
 L$QC.nblocks.sleep.avg_xxx<-paste("QC.nblocks.sleep.avg=c(",paste(QC.nblocks.sleep.avg,collapse=","),")", sep="")   
@@ -307,7 +315,7 @@ write(swline,file="module9_swarm.sh",ncolumns=1)
  
 }
  
-print("--------------End main call----------------")
+message("--------------End main call----------------")
 } 
  
  

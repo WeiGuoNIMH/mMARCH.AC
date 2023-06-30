@@ -62,7 +62,6 @@ ggir.datatransform<-function( outputdir,subdir,studyname, numericID=FALSE,sortBy
 # merge=1 nonwear merge for Rdata; merge=2,csv.merge
 # writedir =sub folder under current directory
 
-
  
 basic.ggir.dir<-paste(outputdir,"/meta/basic",sep="") 
 csv.ggir.dir<-paste(outputdir,"/meta/csv",sep="") 
@@ -91,7 +90,7 @@ nfdigit<-nchar(nf)
 FIXzero<-function(x,nfdigit) paste(c(rep("0",nfdigit-nchar(x)),x),collapse="")
    
 if (mergeVar==1) inputFN=RData.files2 else inputFN=csvData.files2   
-print(length(inputFN))
+message(length(inputFN))
 head(inputFN)   
 f1<-min(f1,length(inputFN)) 
 
@@ -117,36 +116,37 @@ Ymetalong<- c("timestamp","nonwearscore","clippingscore","lightmean","lightpeak"
 
 for (y in 2:length(Ymetalong)){
 outfn.y<-paste(Ymetalong[y],outFN[5],sep="_") 
-print(paste(Ymetalong[y],": " ,outfn.y,sep=""))
+message(paste(Ymetalong[y],": " ,outfn.y,sep=""))
 
 nonwear.mer<-NULL  
 if (y==2) {pdf(paste(Ymetalong[y],outFN[2],sep="_")) ; ifplot=TRUE} else ifplot=FALSE
 for (f in f0:f1){
-print(paste("module1.",y,": ",Ymetalong[y],"---",f,"---start--------------",RData.files2[f],"------------",sep=""))
+message(paste("module1.",y,": ",Ymetalong[y],"---",f,"---start--------------",RData.files2[f],"------------",sep=""))
 T1<-NULL 
 T1<-try(single.data.nonwear(Y=Ymetalong[y],ggir.dir=basic.ggir.dir,filename=inputFN[f],epochIn,epochOut,ID=RData.files2[f] ,ifplot=ifplot) )
 
-if (is.null(dim(T1))) print(paste("Fail to extract ",Ymetalong[y]," in the RData in basic folder",sep="")) else {
+if (is.null(dim(T1))) message(paste("Fail to extract ",Ymetalong[y]," in the RData in basic folder",sep="")) else {
 if (f==f0)  nonwear.mer<-T1 
 if (f>f0 )  nonwear.mer<-myrbind(nonwear.mer,T1)  
 getwd()
-print(paste(c(Ymetalong[y],".mer=",dim(nonwear.mer)),collapse=" "))
+message(paste(c(Ymetalong[y],".mer=",dim(nonwear.mer)),collapse=" "))
 }
 }#f 
 if (y==2) dev.off()
 write.csv(nonwear.mer,file=outfn.y,row.names=F)
-print("Get nonwear matrix-------- ")
+message("Get nonwear matrix-------- ")
 
 }
 }
 
-#2.1 merge csv files............................................................
+#2.1 merge csv files for enmo, angleZ, X etc........................................................
 if (mergeVar==2){ 
 write.csv(csvData.files2,file=paste(outFN[1],"_csvlist.csv",sep=""),row.names=F )
 enmo.data.mer<-list() 
 
 for (f in f0:f1){
-  print(paste("module2 csv data---",f,"---start--------------",csvData.files2[f],"------------",sep=""))
+  message(paste("module2 csv data---",f,"---start--------------",csvData.files2[f],"------------",sep=""))
+   
   T2<-NULL
   T2<-single.csvdata.transform(ggir.dir=csv.ggir.dir,filename=inputFN[f],epochIn,epochOut,DoubleHour=DoubleHour)  
  
@@ -156,7 +156,7 @@ for (f in f0:f1){
     #print(head(T2[[u]] )[,c(1:10, ncol(T2[[u]] )-10:0)])
     if (f==f0)  enmo.data.mer[[u]]<-T2[[u]] 
     if (f>f0)   enmo.data.mer[[u]]<-myrbind(enmo.data.mer[[u]],T2[[u]])   #5/2022 bug, T2[[u]]< 1 day => ncol not match
-    print(paste(c("              ",f,"-",u," : ", names(T2)[u],".data.mer=",dim(enmo.data.mer[[u]])),collapse=" ")) 
+    message(paste(c("              ",f,"-",u," : ", names(T2)[u],".data.mer=",dim(enmo.data.mer[[u]])),collapse=" ")) 
    }
 }# f
 
@@ -171,8 +171,7 @@ for (u in 1:length(T2)) { # u th measure
 
 setwd(olddir) 
 on.exit(setwd(olddir)) 
-print("end----------------------------------------------------------")
- 
+message("end----------------------------------------------------------")
 }
   
 ########################################################################################################################
@@ -259,6 +258,10 @@ timestamp2matrix<-function(Data2,target=2){ #valid only for dup happens only one
 single.data.nonwear<-function(Y,ggir.dir,filename,epochIn,epochOut,ID=filename,ifplot=TRUE){ 
 #  ID was the name used in plotting nonwear figures
  
+  oldpar <- par(no.readonly = TRUE)
+
+
+
   RData.filename <- paste(ggir.dir,filename,sep="/") 
   M<-NULL
   load(RData.filename)
@@ -270,7 +273,7 @@ single.data.nonwear<-function(Y,ggir.dir,filename,epochIn,epochOut,ID=filename,i
 
   ##############################################
   #2 nowearscore
-  print(c("nonwear=",length(M$metalong$timestamp),length(M$metalong[[Yc]])) )
+  message(c("nonwear=",length(M$metalong$timestamp),length(M$metalong[[Yc]])) )
 
   Data2 <- as.data.frame(cbind(M$metalong$timestamp, M$metalong[[Yc]]))
   names(Data2) <- c("timestamp2", Y)
@@ -280,7 +283,7 @@ single.data.nonwear<-function(Y,ggir.dir,filename,epochIn,epochOut,ID=filename,i
                                format = "%Y-%m-%d %H:%M:%S")  
   Data2$timezone <- substr(Data2$timestamp2, 21,24)  
   t=table(Data2[,"timezone"])
-  if (length(t)==2) print("There are 25 hours due to summer time saving")
+  if (length(t)==2) message("There are 25 hours due to summer time saving")
  
   head(Data2)
   dim(Data2)
@@ -303,6 +306,7 @@ single.data.nonwear<-function(Y,ggir.dir,filename,epochIn,epochOut,ID=filename,i
   S<- which(Data3[i,]==j)  
   points(x=S,y=rep(yi,length(S)),pch=pchS[j],col = col.light[i])
   }
+ 
   } 
   mylabels = c("01:00", "04:00", "08:00", "12:00", "16:00", "20:00", "23:00")
   mylabels.at<-which(colnames(Data3) %in% paste(mylabels,":00",sep=""))
@@ -316,7 +320,7 @@ single.data.nonwear<-function(Y,ggir.dir,filename,epochIn,epochOut,ID=filename,i
   RowNonWear<- rowSums((Data3>=1),na.rm=TRUE)  
   if (ncol(Data3)==100) colnames(Data3)[97:100]<-paste("tc_",colnames(Data3)[97:100],sep="")
   Data3.frame<-  cbind(filename,Date=rownames(Data3),RowNonWear,Data3) 
-  
+  on.exit(par(oldpar)) 
   ##########################################################  
   return(Data3.frame)
 
@@ -330,13 +334,27 @@ single.data.nonwear<-function(Y,ggir.dir,filename,epochIn,epochOut,ID=filename,i
 # d<-read.csv("/vf/users/guow4/ProjectX2_2021/0_mMARCH_actigraph/VanMeterAnna/GGIR/output_BinFiles/meta/csv/100002_left wrist_034096_2021-07-12 15-22-50.bin.RData.csv",header=1,stringsAsFactors=1)
 ######################################################################################
   
+
+DoubleHour.align<-function(data,DoubleHour=c("average","earlier","later")){
+  # data= t1, t1, t1, t1 (same timestamp) 
+  if (DoubleHour=="average"){
+   if (nrow(data)>1)   data.align<-as.vector(rowMeans(data,na.rm=TRUE))  
+   if (nrow(data)==1)  data.align<-mean(data,na.rm=TRUE)  
+  }
+  if (DoubleHour=="earlier")  data.align<- data[,1]   
+  if (DoubleHour=="later")  data.align<- data[,ncol(data)]   
+  return(data.align)
+}
+
+
+
 single.csvdata.transform<-function(ggir.dir,filename,epochIn,epochOut, DoubleHour=c("average","earlier","later") ){ 
 
  
   Data.filename <- paste(ggir.dir,filename,sep="/") 
   d<-read.csv(Data.filename,header=1,stringsAsFactors=F)
-  dim(d)
-  head(d)
+ 
+ 
   ##############################################
   Nsec<-60/epochIn
   myser<-c(paste(0,0:9,sep=""),10:99)
@@ -354,49 +372,43 @@ single.csvdata.transform<-function(ggir.dir,filename,epochIn,epochOut, DoubleHou
   # d columns: BFEN,ZCX,ZCY,ZCZ,anglex,angley,anglez,ENMO,MAD
 
 
-DoubleHour.align<-function(data,DoubleHour=c("average","earlier","later")){
-  if (DoubleHour=="average"){
-   if (nrow(data)>1)   data.align<-as.vector(rowMeans(data,na.rm=TRUE))  
-   if (nrow(data)==1)  data.align<-mean(data,na.rm=TRUE)  
-  }
-  if (DoubleHour=="earlier")  data.align<- data[,1]   
-  if (DoubleHour=="later")  data.align<- data[,ncol(data)]   
-  return(data.align)
-}
-
 
 outputlist<-list()
 for (u in 2:ncol(d)) {
   
   Vname<-colnames(d)[u] 
   data.trans <-timestamp2matrix(d,target=u) #17280 or  + one hour columns for 5s data  
-  print(paste("a",u,") start timestamp2matrix() on ",u,"th column: ",Vname," ----------------",sep="")) 
-  print(paste(c("raw data=",dim(d)),collapse=" "))  
-  print(paste(c("Transform data=",dim(data.trans)),collapse=" ")) 
+  message(paste("a",u,") start timestamp2matrix() on ",u,"th column: ",Vname," ----------------",sep="")) 
+  message(paste(c("raw data=",dim(d)),collapse=" "))  
+  message(paste(c("Transform data=",dim(data.trans)),collapse=" ")) 
 
-  
+ 
   ######################################################### 
   #6a align the data for double hours or less than one day
  
  if (ncol(data.trans)*epochIn/3600 !=24){ 
   
-  print ("Warning: mismatch due to a day with < or > 24 hours (time change) and we will align the data")
+  message ("Warning: mismatch due to a day with < or > 24 hours (time change) and we will align the data")
   Nwindow<-24*3600/epochIn
   data.trans.align<-array(NA,dim=c(nrow(data.trans),Nwindow))
   tag.print=0 
 
   for (j in 1:Nwindow){
-   
+ 
   abname<-timeSer24h[j]
   abname.index<-which(colnames(data.trans) %in% abname)
   if (length(abname.index)>1 & tag.print==0) { 
       tag.print=1   
-      print(paste("25 hour: first duplicate timestamp was found at ",a,abname[1],"with",length(abname.index),"columns",sep=" ")) }
+      message(paste("25 hour: first duplicate timestamp was found at ",abname[1],"with",length(abname.index),"columns",sep=" ")) }
+
+  if (length(abname.index)==0)  data.trans.align[,j]<- NA   
   if ( length(abname.index)==1 ) {
-       data.trans.align[,j]<- data.trans[,abname.index]  } else {  
+       data.trans.align[,j]<- data.trans[,abname.index]  } 
+  if ( length(abname.index)>=2 ) { 
        data.trans.align[,j]<- DoubleHour.align(data=data.trans[,abname.index],DoubleHour=DoubleHour) 
        #print(c(j,data.trans[10,abname.index],data.trans.align[10,j]))
        }
+
    } 
   colnames(data.trans.align)<-timeSer24h 
   rownames(data.trans.align)<-rownames(data.trans) 
@@ -410,7 +422,7 @@ for (u in 2:ncol(d)) {
 
   if (epochIn < epochOut ){
 
-  print(paste("we will shrink the data from ",epochIn," seconds to ",epochOut," seconds",sep=""))
+  message(paste("we will shrink the data from ",epochIn," seconds to ",epochOut," seconds",sep=""))
   Lwindow<-epochOut/epochIn
   Nwindow<-24*3600/epochOut 
 
@@ -432,7 +444,7 @@ for (u in 2:ncol(d)) {
 
   outputlist[[u-1]]<-cbind(filename,Date=rownames(data.trans.align.shrink),data.trans.align.shrink)
   names(outputlist)[u-1]<-Vname
-  print(paste(c("Output Transform data=",dim(data.trans.align.shrink)),collapse=" ")) 
+  message(paste(c("Output Transform data=",dim(data.trans.align.shrink)),collapse=" ")) 
 
 } #end uth Vname
   

@@ -1,7 +1,7 @@
 ---
-title: 'Extracts Features of Domains of Physical Activity, Sleep and Circadian Rhythmicity '
+title: 'mMARCH.AC module 7a: Extracts Features of Domains of Physical Activity, Sleep and Circadian Rhythmicity '
 author: "Wei Guo"
-date: "2021-02-19"
+date: "2022-09-20"
 output:
   html_document:
     df_print: paged
@@ -30,23 +30,22 @@ For GeneActiv ENMO, we take 1000*ENMO in the counts data.
 
 
 ```{r ,include=FALSE  }
-currentdir="/data/guow4/project0/GGIR/postGGIR/postGGIR_compile/postGGIR3.0/inst/extdata/example/afterGGIR"
+currentdir="/data/guow4/project0/GGIR/postGGIR/postGGIR_compile/v2/example/afterGGIR"
 studyname="Example"
-outputdir="/data/guow4/project0/GGIR/postGGIR/postGGIR_compile/postGGIR3.0/inst/extdata/example/GGIR/output_binfile"
+outputdir="/data/guow4/project0/GGIR/postGGIR/postGGIR_compile/v2/example/GGIR/output_binfile"
 epochIn=5
-flag.epochOut=60
+epochOut=60
 log.multiplier=9250
 PA.threshold=c(50,100,400)
 RemoveDaySleeper=FALSE
-
-epochOut<-flag.epochOut
+ 
 setwd(currentdir) 
  
 #  PA.threshold = c(217,645,1811,Inf)   # for 217=<counts<645 philips counts data
 #  PA.threshold = c(50,100,400,Inf)     #   part5FN="WW_L50M100V400_T5A5" 
 
 enmoFN<-paste("./data/impu.flag_All_",studyname,"_ENMO.data.", epochOut,"s.csv",sep="")  
-foutFN<-function(x,studyname) paste("part7a_",studyname,"_some_features_page",x,".csv",sep="") 
+foutFN<-function(x,studyname) paste("module7a_",studyname,"_new_features_page",x,".csv",sep="")  
 outenmoFN<-paste("./data/clean.impu.flag_All_",studyname,"_ENMO.data.",epochOut,"s.csv",sep="")  
 outsleepFN<-paste("./data/clean.impu.flag_All_",studyname,"_ENMO.data.",epochOut,"s.sleepmatrix.csv",sep="")  
 M10windowFN<-paste("./data/clean.impu.flag_All_",studyname,"_ENMO.data.",epochOut,"s.M10windowMatrix.csv",sep="")  
@@ -62,27 +61,33 @@ M10windowFN<-paste("./data/clean.impu.flag_All_",studyname,"_ENMO.data.",epochOu
 
 
 ```{r x1,include=FALSE} 
-# 0a) read data--------------------------
-#install.packages('devtools')
-#devtools::install_github("junruidi/actigraphy") 
-#https://github.com/junruidi/actigraphy
-#devtools::install_github("idc9/r_jive")
-#library(actigraphy) 
+# 0a) read data-------------------------- 
 
 library(xlsx)   
 library(knitr) 
 library(dplyr)  # %>%
-library(cosinor)  
-library(postGGIR) 
+library(cosinor)   
+library(mMARCH.AC) 
 library(zoo) #for RA 
+library(ActCR)
+library(ActFrag) 
+library(survival)
+library(ineq)
+library(mMARCH.AC) 
+
 setwd(currentdir)  
 
 # Prepare count/wear data for JIVE
  
 D1<-read.csv(enmoFN,head=1,nrow=-1,stringsAsFactors=F)
 Ctop<-which(colnames(D1)=="X00.00.00")-1
-table(D1[,c("KEEP","remove16h7day")])
-if (nrow(D1)>nrow(unique(D1[,1:2])) ) stop("Found duplicate days in ENMO data")
+table(D1[,c("KEEP","remove16h7day")]) 
+if (nrow(D1)>nrow(unique(D1[,1:2])) ) {temp<-paste(D1[,1],D1[,2],sep=" ")  
+                                       s<-which(duplicated(temp))
+                                       print(unique(D1[s,1]))
+                                       print(temp[s]) 
+                                       stop("Found duplicate days in ENMO data")} 
+
 
 D2<-D1[which(D1[,"KEEP"]=="keep" &!is.na(D1[,"newID"])),]
 
@@ -112,132 +117,43 @@ for (j in 3:ncol(wear)) wear[,j]<-1
    + problem 2: second day do not have sleep status from 0am to sleeponest (say 10pm). Set sleep=0 for now.
    + nonsleepMatrix: sleep=0/awake=1
    + clean data and sleepMatrix were wrote to the data folder
-
-
-
-
-```{r x2,include=FALSE  }
-# 0b) create sleepMatrix--------------------------
-# 12/17 sleepMatrix missing since part4.sleep was missing due to data cleaning in D3.
-# 1/4 bug: duplicate days in part4.full 
-# (1) fix duplicate days
-sleepFull.fn<-paste(outputdir,"/results/QC/part4_nightsummary_sleep_full.csv",sep="")  
-sleepFull<-read.csv(sleepFull.fn,head=1,stringsAsFactors=F) 
-#sleepMatrixH<-D1[,c("filename","Date", "daysleeper", "sleeponset","wakeup")] 
-sleepFull[,"filename"]<- gsub(".RData","",sleepFull[,"filename"]) 
-sleepFull[,"Date"]<- format(as.Date(sleepFull[,"calendar_date"],"%d/%m/%Y"), "%Y-%m-%d") 
-
  
-sleepMatrixH<-sleepFull[,c("filename","Date", "daysleeper", "sleeponset","wakeup")] 
-sleepMatrixH[,"oldDate"]<-sleepMatrixH[,"Date"]
-part4ids<-paste(sleepMatrixH[,"filename"],sleepMatrixH[,"Date"],sep=" ") 
-dupID<-part4ids[which(duplicated(part4ids))]
 
-if (length(dupID)>=1){
-for (i in 1:length(dupID)){
-S0<-which(part4ids==dupID[i])
-work<-sleepMatrixH[which(sleepMatrixH[,"filename"]==sleepMatrixH[S0[1],"filename"]),]
-
-sleepMatrixH[S0,"problem"]<-"duplicate"
-thisday<-sleepMatrixH[S0[1],"Date"]
-if ( as.character(as.Date(thisday )+1) %in% work[,"Date"]  &   as.character(as.Date(thisday )-1) %in% work[,"Date"]) stop("found both yesterday and next day")
-if ( as.character(as.Date(thisday )+1) %in% work[,"Date"]) sleepMatrixH[S0[1],"Date"]<-as.character(as.Date(sleepMatrixH[S0[1],"Date"] )-1)
-if ( as.character(as.Date(thisday )-1) %in% work[,"Date"]) sleepMatrixH[S0[2],"Date"]<-as.character(as.Date(sleepMatrixH[S0[1],"Date"] )+1)
-} 
-reportSleep<-sleepMatrixH[which(sleepMatrixH[,"filename"] %in% sleepMatrixH[which(part4ids %in% dupID),"filename"]),]
-} 
+```{r x2, results="hide",warning=FALSE,message=FALSE} 
+sleepFull.fn<-paste(outputdir,"/results/QC/part4_nightsummary_sleep_full.csv",sep="")  
+sleepCall<-makeSleepDataMatrix(sleepFN=sleepFull.fn,epochOut=60,impute=TRUE,outputFN=outsleepFN)  
 ```
 
-```{r x3,include=FALSE  }
-# (2) define 1/0 according to each row (day)
-quantile(sleepMatrixH[,"sleeponset"],na.rm=T)
-quantile(sleepMatrixH[,"wakeup"],na.rm=T)
-sleepMatrixT<-array(0,dim=c(nrow(sleepMatrixH),n1440))
-sleepMatrixH[,"sleepwindow"]<-""
-
-for (i in 1:nrow(sleepMatrixT)){
-# print(i)
-start = sleepMatrixH[i,"sleeponset"]
-end = sleepMatrixH[i,"wakeup"] 
-
-today<-i 
-nextday<-which(sleepMatrixH[,"filename"]==sleepMatrixH[i,"filename"] & as.Date(sleepMatrixH[,"Date"] )==as.Date(sleepMatrixH[i,"Date"] )+1) 
- 
-
-if (!is.na(start) & !is.na(end) & end<=48) {#read only sleep valid lines
-if (start>24) start2<-start-24 else start2=start
-if (end>24) end2<-end-24 else end2=end
-start3<- ceiling(start2*3600/epochOut)  # sleep hour -> minue or 30 seconds
-end3<-floor(end2*3600/epochOut)
-
-
-
-# Define sleep intervals based on sleeponset and wakeup:
- # 12----------------24----------------------------------48 hours for three days.
- #1 12----------------24  today
- #2                   24----------------------------------48  nextday
- #3 12----------------24----------------------------------48  today and next day 
-
-if (start<24 & end<24) sleepMatrixT[today,start3:end3]<-1
-if (start>24 & end>24) sleepMatrixT[nextday,start3:end3]<-1 
-if (start<24 & end>24) { sleepMatrixT[today,start3:n1440]<-1
-                         sleepMatrixT[nextday,1:end3]<-1
-                       }  
-if (start<24 & end<24) sleepMatrixH[today,"sleepwindow"]<-paste(sleepMatrixH[today,"sleepwindow"],paste(start3,end3,sep="~") ,sep=",") 
-if (start>24 & end>24) sleepMatrixH[nextday,"sleepwindow"]<-paste(sleepMatrixH[nextday,"sleepwindow"],paste(start3,end3,sep="~") ,sep=",")
-if (start<24 & end>24) {sleepMatrixH[today,"sleepwindow"]<-paste(sleepMatrixH[today,"sleepwindow"],paste(start3,n1440,sep="~") ,sep=",") 
-                        sleepMatrixH[nextday,"sleepwindow"]<-paste(sleepMatrixH[nextday,"sleepwindow"],paste(1,end3,sep="~") ,sep=",") 
-                       } 
-
-}  
-}#end i
-
-# Double check the sleepwindow based on sleepmatrix on the right
-# make sure sleepwindow (theory) matchs sleepwindow2 and awakewindow2 calculated by sleep matrix
-gaps<-function(X){X<-sort(X)
-                  S1<-unique(sort(c(0,length(X),which(diff(X)>=2))))
-                  y<-NULL
-                  for (t in 2:length(S1)) 
-                   y<-c(y,paste(X[S1[t-1]+1],X[S1[t]],sep="~"))
-                  return(paste(y,collapse=","))
-}
-# gaps(c(1,2,3,6,7,9))= "1~3,6~7,9~9"
-
-for (i in 1:nrow(sleepMatrixH)) {
-sleepMatrixH[i,"awakewindow2"]<-gaps(which(sleepMatrixT[i,]==0))
-sleepMatrixH[i,"sleepwindow2"]<-gaps(which(sleepMatrixT[i,]==1))
-}
-head(sleepMatrixH)
- 
- 
-nonsleepMatrix<-cbind(sleepMatrixH[,c("filename","Date")],1-sleepMatrixT) 
-colnames(nonsleepMatrix)<-c("ID","Day",paste("MIN",1:n1440,sep=""))
-
-colnames(sleepMatrixT)<- paste("MIN",1:n1440,sep="")  
-sleepMatrixOut<-cbind(sleepMatrixH,sleepMatrixT)
-write.csv(sleepMatrixOut,file=outsleepFN,row.names=FALSE)
-head(sleepMatrixOut[,1:20])  
-rownames(sleepMatrixH)<-NULL
-length(which(is.na(as.vector(sleepMatrixT))))
-
-kable(head(sleepMatrixH),caption="Example of sleep matrix")
+```{r,include=FALSE} 
 sleep.story<-paste("Among ",nrow(D1)," nights, there are ",length(which(D1[,"daysleeper"]==1))," daysleeper nights. For daysleeper nights, it happens on ",paste(names(table(daysleeperM[,"measurementday"])),collapse="/")," th night for ",paste(table(daysleeperM[,"measurementday"]),collapse="/")," times. Second,  subjects with daysleeper nights have ",paste(names(table(table(daysleeperM[,"filename"]))),collapse="/")," nights for ",paste(table(table(daysleeperM[,"filename"])),collapse="/")," times.",sep="")
-  
 ```   
 
+  
+ 
 **Messages from the sleep data**
  
-```{r,echo=FALSE,message=F}
-if (length(dupID)>=1){ 
-kable(reportSleep,caption="Warning: found duplicate days")  
-} 
-if (length(which(sleepMatrixH[,"wakeup"]>48))>=1){
-kable(sleepMatrixH[which(sleepMatrixH[,"wakeup"]>48),],caption="Warning: found wakeup>=48")
-}
+```{r,echo=FALSE,message=F} 
+message<-"" 
+library(kableExtra)  
+
+if (length(sleepCall$duplicatedays)>1) {
+       rownames(sleepCall$duplicatedays)<-NULL
+       kable(sleepCall$duplicatedays,caption="Warning: found duplicate days")  %>% 
+             kable_material(c("striped", "hover"))  
+}  else message<-sleepCall$duplicatedays
+if (length(sleepCall$sleepproblem)>1) {
+       rownames(sleepCall$sleepproblem)<-NULL 
+       kable(sleepCall$sleepproblem,caption="Warning: found wakeup>=48")  %>% 
+             kable_material(c("striped", "hover"))  
+} else message<-paste(message,sleepCall$sleepproblem,sep=".    ")
 ```
+
+`r message`
+
 #
 `r sleep.story`   
-
+ 
+ 
 
 ```{r x4,include=FALSE  }
 # 0c) # Match ids from sleep file-------------------------
@@ -274,6 +190,8 @@ write.csv(nonsleepMatrix,file="nonsleepMatrix.csv",row.names=FALSE)
 nonsleepMatrix<-read.csv("nonsleepMatrix.csv",head=1,stringsAsFactors=FALSE)
 dim(nonsleepMatrix)
 dim(count)
+
+NSam<-function(x) length(setdiff(unique(x),NA))
 ```
 
  
@@ -282,10 +200,10 @@ dim(count)
 
 The activity data at the minute level (`r enmoFN`) was stored in a format of `data.frame` of dimension $(\sum_i d_i) \times `r ncol(D1)`$, where $d_i$ is the number of available days for subject $i$. And the order of the `r ncol(D1)` columns (and corresponding column names) was as follows, `r colnames(D1)[1:Ctop]`, "MIN1", ..., "MIN1440".   
 
-     *  Raw data = (`r dim(D1)`), `r length(unique(D1[,"filename"]))` files, `r length(unique(D1[,"newID"]))` individuals.
-     *  Clean data = (`r dim(D2)`), `r length(unique(D2[,"filename"]))` files, `r length(unique(D2[,"newID"]))` individuals.     
-     *  Rm daysleepers = (`r dim(D3)`), `r length(unique(D3[,"filename"]))` files, `r length(unique(D3[,"newID"]))` individuals.    
-     *  Count data = (`r dim(count)`), `r length(unique(count[,"ID"]))` individuals.    
+     *  Raw data = (`r dim(D1)`), `r length(unique(D1[,"filename"]))` files, `r NSam(D1[,"newID"])` individuals.
+     *  Clean data = (`r dim(D2)`), `r length(unique(D2[,"filename"]))` files, `r NSam(D2[,"newID"])` individuals.     
+     *  Rm daysleepers = (`r dim(D3)`), `r length(unique(D3[,"filename"]))` files, `r NSam(D3[,"newID"])` individuals.    
+     *  Count data = (`r dim(count)`), `r NSam(count[,"ID"])` individuals.    
 
 
 
@@ -311,9 +229,18 @@ Total volumen of physical activity serves as a proxy for the total amount of acc
 
 
 ```{r chunk21} 
-tac = Tvol2(count.data = count, weartime = wear,logtransform = FALSE) #count=1000ENMO
-tlac = Tvol2(count.data = log.count,weartime = wear,logtransform = FALSE) #ID,Day,TAC
+tac24 = Tvol2(count.data = count, weartime = wear,logtransform = FALSE)  
+tlac24 = Tvol2(count.data = log.count,weartime = wear,logtransform = FALSE)  
+colnames(tac24)[3]<-"TAC_24h"
+colnames(tlac24)[3]<-"TLAC_24h"
+
+tac = Tvol2(count.data = count, weartime = nonsleepMatrix,logtransform = FALSE) #count=1000ENMO
+tlac = Tvol2(count.data = log.count,weartime = nonsleepMatrix,logtransform = FALSE) #ID,Day,TAC
 colnames(tlac)[3]<-"TLAC"
+
+temp1<-merge(tac24,tlac24,by=c("ID","Day"),all=TRUE) 
+temp2<-merge(tac,tlac,by=c("ID","Day"),all=TRUE) 
+tac4features<-merge(temp2,temp1,by=c("ID","Day"),all=TRUE)   
 ```
 
   * `r paste("dim(tac) = ",dim(tac)[1],"X",dim(tac)[2],sep="")`     
@@ -336,10 +263,9 @@ It is sometimes of interest to look at time spent in a certain state during a da
    +  `r paste("vigorous time in minutes was defined as ENMO>",PA.threshold[3],"mg",sep="") `.
    +  sleep window was removed from the physical activity duration calculation by set weartime=nonsleepMatrix in Time_long2().
  
-```{r chunk25x_earlier_for_PAinM10, include=FALSE} 
-iv_all = IV_long2(count.data = count, level = 600) #10 minutes window
-ra_all = RA_long2(count.data = count ) # RA,L5,M10
-is_all = IS_long2(count.data = count, level = 600) 
+```{r chunk25x_earlier_for_PAinM10, include=FALSE}   
+ra_all = RA_long2(count.data = count, window=(ncol(count)-2)/1440, method = "average") # one minute window  
+ 
 
 quantile(ra_all[,"M10TIME"])
 dim(ra_all)
@@ -352,10 +278,13 @@ M10windowMatrix<-wear
 n60=60*60/epochOut
 n600=10*60*60/epochOut  # M10 ends after 10 hours 
 n599=n600-1     
-for (i in 1:nrow(M10windowMatrix)){  
-start3<- as.integer(ra_all[i,"M10TIME"]*n60)     
-end3<-start3+n599   
+for (i in 1:nrow(M10windowMatrix)){ #error for 841~1440 window for 30s data 
+end3<- as.integer((ra_all[i,"M10TIME"]+10-1/60)*60)  #end position for 1440 data  
+end3<-end3*60/epochOut 
+start3<-end3-n599   
   
+ra_all[i,"start"]<-start3
+ra_all[i,"end"]<-end3
 M10windowMatrix[i,3:ncol(M10windowMatrix)]<-0
 M10windowMatrix[i,2+start3:end3]<-1   
 if (end3-start3!=n599 | end3>n1440 | sum(M10windowMatrix[i,3:ncol(M10windowMatrix)])!=n600) stop(paste("Found wrong M10 window at ",indexer.M10[i],sep=""))  
@@ -364,30 +293,7 @@ dim(M10windowMatrix)
 head(M10windowMatrix) 
 write.csv(M10windowMatrix,file=M10windowFN,row.names=FALSE)
 ```
-
-```{r chunk22a,include=FALSE} 
-# activity_time = light + mod + vig time
-PA.threshold = c(PA.threshold,Inf)  # for vig time.
-
-PAfun<-function(count.data,weartime,PA.threshold){
-sed_all0<-NULL
-for (f in 1:length(PA.threshold)){
-temp = Time_long2(count.data = count.data, weartime = weartime, thresh =PA.threshold[f], smallerthan = TRUE)
-colnames(temp)[3]<-paste(colnames(temp)[3],PA.threshold[f],sep="")
-if (f==1) sed_all0<-temp else {
-if (length(which(sed_all0[,1]!=temp[,1]))>=1 | length(which(sed_all0[,2]!=temp[,2]))>=1) stop("check ID+Day in Time_long2 function") 
-sed_all0<-cbind(sed_all0,temp[,3])  
-}
-# print(c(f,dim(temp),dim(sed_all0)))
-}
-sed_all<-sed_all0
-for (j in 4:6) sed_all[,j]<-sed_all0[,j]-sed_all0[,j-1]
-colnames(sed_all)[3:6]<-c("sed_time","light_time","mod_time","vig_time")
-sed_all[,"MVPA_time"]<-sed_all[,"mod_time"] + sed_all[,"vig_time"]  
-sed_all[,"activity_time"]<-sed_all[,"light_time"] +sed_all[,"mod_time"] + sed_all[,"vig_time"] 
-return(sed_all)
-} 
-```
+ 
 
 **Calculation activity duration based on  Day time (nonsleep)/ M10 window / 24 hours**
 
@@ -397,8 +303,7 @@ sed_allB<-PAfun(count.data=count,weartime = M10windowMatrix,PA.threshold)
 sed_allC<-PAfun(count.data=count,weartime = wear,PA.threshold)  
 
 sed_all<-merge(sed_allA,sed_allB,by=c("ID","Day"),all=TRUE,suffix=c("","_M10"))
-sed_all<-merge(sed_all,sed_allC,by=c("ID","Day"),all=TRUE,suffix=c("","_24h"))
-
+sed_all<-merge(sed_all,sed_allC,by=c("ID","Day"),all=TRUE,suffix=c("","_24h")) 
 ``` 
 
   * `r paste("dim(sed_all) = ",dim(sed_all)[1],"X",dim(sed_all)[2],sep="")`     
@@ -441,11 +346,6 @@ We can calculate the above mentioned metrics for both sedentary and active bout.
 
 Given all the activity and wear/nonwear flag data for the whole dataset, user can choose to calcualte framentation at daily level, or aggregate bouts across all available days by choosing from either "subject" and "day" for the argument `by`:
 
-```{r,include=FALSE} 
-library(survival)
-library(ineq)
-library(dplyr)
-```
 ```{r chunk23,warning=FALSE,message=FALSE}
 frag_by_subject = fragmentation_long2(count, weartime = wear,thresh=PA.threshold[1], metrics = "all",by = "subject")
 frag_by_day = fragmentation_long2(count, weartime = wear,thresh=PA.threshold[1], metrics ="all",by = "day")
@@ -471,27 +371,34 @@ The upper panel is for subject-level and the lower panel is for day-level.
 The classic cosinor model is defined as $r(t)= mes + amp \times c(t)$ where $c(t) = \cos([t-\phi]2\pi/24)$ where mes is mesor, amp is amplitude, $\phi$ is the acrophase.  It is suggested to log transformed the curve  
  
 
-```{r chunk24}  
-extcos = ActCosinor( data = count )  
-extcos.log = ActCosinor( data = log.count )   
+```{r chunk24,results="hide"}  
+minuteW=(ncol(count)-2)/1440
+Cos = ActCosinor_long2( count.data = count, window=minuteW)  
+Cos.log = ActCosinor_long2( count.data = log.count, window=minuteW)   
+extcos = ActExtendCosinor_long2(count.data = count, window=minuteW)  
+extcos.log = ActExtendCosinor_long2(count.data = log.count, window=minuteW)   
+colnames(Cos)<-c("ID","ndays","mesor","amp","acro","acrotime")
+colnames(Cos.log)<-c("ID","ndays","mesor_L","amp_L","acro_L","acrotime_L")
+colnames(extcos)<-gsub(paste("_",minuteW,sep=""),"_ext",colnames(extcos))
+colnames(extcos.log)<-gsub(paste("_",minuteW,sep=""),"_ext_L",colnames(extcos.log))
+
+cosinormodel.1<-merge(Cos,Cos.log,by=c("ID","ndays"),all=TRUE) 
+cosinormodel.2<-merge(extcos,extcos.log,by=c("ID","ndays"),all=TRUE) 
+cosinormodel<-merge(cosinormodel.1[,-2],cosinormodel.2[,-2],by="ID",all=TRUE)  
 ```
  
-  * `r paste("dim(extcos) = ",dim(extcos)[1],"X",dim(extcos)[2],sep="")`    
-  * `r paste("dim(extcos.log) = ",dim(extcos.log)[1],"X",dim(extcos.log)[2],sep="")`     
+  * `r paste("dim(cosinormodel) = ",dim(cosinormodel)[1],"X",dim(cosinormodel)[2],sep="")` 
  
 
-```{r plot24, echo=FALSE , fig.width=10, fig.height=8} 
-par(mfrow=c(2,ncol(extcos)-1)) 
-if (ncol(extcos)>=4) par(mai=c(0.82,0.42,0.42,0 )) else par(mai=c(0.82,0.42,0.42,0.4 ))  # bottom,left,up,right 
-for (j in 2:ncol(extcos)) boxplot(as.numeric(as.character(extcos[,j])),xlab=colnames(extcos)[j])
-for (j in 2:ncol(extcos.log)) boxplot(as.numeric(as.character(extcos.log[,j])),xlab=colnames(extcos.log)[j])
  
+```{r plot24, echo=FALSE , fig.width=10, fig.height=3} 
+par(mfrow=c(1,9) )
+if (ncol(cosinormodel)>=4) par(mai=c(0.82,0.42,0.42,0 )) else par(mai=c(0.82,0.42,0.42,0.4 ))  # bottom,left,up,right 
+for (j in 2:ncol(cosinormodel)) boxplot(as.numeric(as.character(cosinormodel[,j])),xlab=colnames(cosinormodel)[j])  
 ``` 
-The upper panel is for ExtCos without logtransform and the lower panel is for ExtCos with logtransform .
-  
 
 
-### 2.5 intradaily variability and interdaily statbility
+### 2.5 intradaily variability and interdaily statbility (based on 10 minutes level activity data)
 
 IV measures fragmentation in the rest/activity rhythms and is capable of detecting periods of daytime sleep and nocturnal arousal and is calculated as the ratio of the mean squares of the differences between all successive hours (or minutes), and the mean squares around the grand mean.
 
@@ -508,22 +415,28 @@ M10TIME | Start time of the highest acceleration value of the highest accelerati
 
 For a single vector,
 
-```{r chunk25,eval=FALSE}  
-iv_all = IV_long2(count.data = count, level = 600) # 10 minutes window
-ra_all = RA_long2(count.data = count ) 
-is_all = IS_long2(count.data = count, level = 600)  
+ 
+```{r chunk25,eval=TRUE,warning=F,message=F,results="hide"}   
+iv_all = IV_long2(count.data = count, window=(ncol(count)-2)/144, method = "average") #10 minutes window
+colnames(iv_all)[3]<-"IV" 
+
+is_all = IS_long2(count.data = count, window=(ncol(count)-2)/144, method = "average"  )  #10 minute level 
+colnames(is_all)[2]<-"IS"  
+
+ra_all = RA_long2(count.data = count, window=(ncol(count)-2)/1440, method = "average") # one minute window for RA,L5,M10,L5time, M10time 
 ```
+ 
  
   * `r paste("dim(iv_all) = ",dim(iv_all)[1],"X",dim(iv_all)[2],sep="")`    
   * `r paste("dim(ra_all) = ",dim(ra_all)[1],"X",dim(ra_all)[2],sep="")`     
   * `r paste("dim(is_all) = ",dim(is_all)[1],"X",dim(is_all)[2],sep="")`    
 
-```{r plot25, echo=FALSE , fig.width=10, fig.height=5} 
-par(mfrow=c(1,3)) 
+```{r plot25, echo=FALSE , fig.width=10, fig.height=4} 
+par(mfrow=c(1,7)) 
 par(mai=c(0.82,0.42,0.42,0.4 )) # bottom,left,up,right 
 boxplot(iv_all[,"IV"],xlab="IV")
-boxplot(ra_all[,"RA"],xlab="RA")
 boxplot(is_all[,"IS"],xlab="IS")
+for (j in 3:ncol(ra_all)) boxplot(ra_all[,j],xlab=colnames(ra_all)[j])
 ``` 
 
 ```{r mergeAll,include=FALSE}
@@ -539,7 +452,7 @@ dim(ra_all)
 dim(frag_by_subject)
 dim(frag_by_day)
 
-output<-merge(tac,tlac,by=c("ID","Day"),all=TRUE) 
+output<-tac4features 
 output<-merge(output,sed_all,by=c("ID","Day"),all=TRUE) 
 output<-merge(output,frag_by_day,by=c("ID","Day"),all=TRUE) 
 output<-merge(output,iv_all,by=c("ID","Day"),all=TRUE) 
@@ -548,8 +461,7 @@ output[,"SubjectLevel"]<-1
 # subject level 
 output<-merge(output,is_all,by="ID",all=TRUE)  
 output<-merge(output,frag_by_subject,by=c("ID"),suffix=c("","_S"),all=TRUE) 
-output<-merge(output,extcos,by=c("ID"),all=TRUE) 
-output<-merge(output,extcos.log,by=c("ID"),suffix=c("","_L"),all=TRUE) 
+output<-merge(output,cosinormodel,by=c("ID"),all=TRUE)  
 output<-merge(idM,output,by.x=c("filename","Date"),by.y=c("ID","Day"),all=TRUE) 
 output<-output[,c(1,3,2,4:ncol(output))] 
 dim(output)
@@ -601,6 +513,7 @@ fit.fpca <- fpca.face(X, knots = 35)
 Phi <- fit.fpca$efunctions
 eigenvalues <- fit.fpca$evalues
 scores <- fit.fpca$scores
+colnames(scores)<-paste("PC",1:ncol(scores),sep="")
 
 perc.var <- 100*round(eigenvalues/sum(eigenvalues), digits = 3)
 sum(perc.var) 
@@ -608,17 +521,20 @@ sum(perc.var[1:4])
 face_day_PCs<-cbind(idM,scores)
 
 
+scores2<-array(NA,dim=c(nrow(idM.avg),10))
+colnames(scores2)<-paste("PC",1:ncol(scores2),sep="")
 fit.fpca2 <- try( fpca.face(dmean.log.avgX, knots = 35))
-if (attr(fit.fpca2,"class")!="try-error"){
+if (attr(fit.fpca2,"class")!="try-error" ){
 Phi2 <- fit.fpca2$efunctions
 eigenvalues2 <- fit.fpca2$evalues
 scores2 <- fit.fpca2$scores 
 perc.var2 <- 100*round(eigenvalues2/sum(eigenvalues2), digits = 3)
 sum(perc.var2) 
 sum(perc.var2[1:4])  
-} else scores2<-array(NA,dim=c(nrow(idM.avg),10))
-face_subject_PCs<-cbind(idM.avg,scores2)
- 
+if (length(eigenvalues2)==1) scores2<-data.frame(PC1=scores2) else colnames(scores2)<-paste("PC",1:ncol(scores2),sep="")  #5-27-22 bug: sqrt(Eigen$values) : NaNs produced
+
+}  
+face_subject_PCs<-cbind(idM.avg,scores2)  
 
 write.csv(face_day_PCs, file=foutFN("2_face_day_PCs", studyname),  col.names = TRUE, row.names = FALSE )
 write.csv(face_subject_PCs, file=foutFN("3_face_subject_PCs", studyname),  col.names = TRUE, row.names = FALSE )
@@ -676,8 +592,8 @@ n1440*Z2$sigma2/Z2$totvar
 Z2$totvar
 subject_PCs<-cbind(idM.avg2,Z2$xi[[1]]  ) 
 day_PCs<-cbind(idM,Z2$xi[[2]]  )
-
-
+colnames(subject_PCs)[(ncol(idM.avg2)+1): ncol(subject_PCs)]<-paste("PC",1:ncol(Z2$xi[[1]]),sep="")
+colnames(day_PCs)[(ncol(idM)+1): ncol(day_PCs)]<-paste("PC",1:ncol(Z2$xi[[2]]),sep="")
 
 write.csv(day_PCs, file=foutFN("4_denseFLMM_day_PCs", studyname),  col.names = TRUE, row.names = FALSE )
 write.csv(subject_PCs, file=foutFN("5_denseFLMM_subject_PCs",studyname), col.names = TRUE, row.names = FALSE )
@@ -726,5 +642,5 @@ legend('topleft',co=1:4,
 
 How to run this? 
  
-cd /data/guow4/project0/GGIR/postGGIR/postGGIR_compile/postGGIR3.0/inst/extdata/example/afterGGIR   
-R -e "rmarkdown::render('part7a_Example_postGGIR_JIVE_1_somefeatures.Rmd'   )" 
+cd /data/guow4/project0/GGIR/postGGIR/postGGIR_compile/v2/example/afterGGIR   
+R -e "rmarkdown::render('module7a_Example_calculate_newfeatures.Rmd'   )" 

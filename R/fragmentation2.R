@@ -262,7 +262,7 @@ fragmentation_long2 = function(
 
 
   if(missing(weartime)){
-    print("No weartime supplied, calculated based on defualt from 05:00 to 23:00")
+    message("No weartime supplied, calculated based on defualt from 05:00 to 23:00")
     weartime = wear_flag(count.data =  count.data)
   }
     n1440 <- ncol(count.data) - 2 #gw 5/4/21 for 30 seconds data etc

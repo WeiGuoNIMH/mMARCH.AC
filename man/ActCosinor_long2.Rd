@@ -4,7 +4,7 @@
 \alias{ActCosinor_long2}
 \title{Cosinor Model for Circadian Rhythmicity for the Whole Dataset}
 \usage{
-ActCosinor_long2(count.data, window = 1)
+ActCosinor_long2(count.data, window = 1, daylevel = FALSE)
 }
 \arguments{
 \item{count.data}{\code{data.frame} of dimension n * (p+2) containing the
@@ -13,7 +13,9 @@ The first two columns have to be ID and Day. ID can be
 either \code{character} or \code{numeric}. Day has to be \code{numeric} indicating
 the sequence of days within each subject.}
 
-\item{window}{The calculation needs the window size of the data. E.g window = 1 means each epoch is in one-minute window.}
+\item{window}{\code{numeric} The calculation needs the window size of the data. E.g window = 1 means each epoch is in one-minute window.}
+
+\item{daylevel}{\code{logical}   If the cosinor model was run for day-level data. The default value is FALSE while the activity data for all days were used for model fitting. When the value is TRUE, the single day data were used for model fitting.}
 }
 \value{
 A \code{data.frame} with the following 5 columns

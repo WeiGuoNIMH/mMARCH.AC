@@ -46,8 +46,8 @@ ActCosinor2 = function(
 
 
   tmp.dat = data.frame(time = rep(1:dim, n.days) / (n60/window), Y = x) #gw 5/5/21
-  print(dim(tmp.dat))
-  print(head(tmp.dat))
+  #print(dim(tmp.dat))
+  #print(head(tmp.dat))
 
   fit = cosinor.lm(Y ~ time(time) + 1, data = tmp.dat, period = 24)
 
@@ -81,7 +81,8 @@ ActCosinor2 = function(
 #' The first two columns have to be ID and Day. ID can be
 #' either \code{character} or \code{numeric}. Day has to be \code{numeric} indicating
 #' the sequence of days within each subject.
-#' @param window The calculation needs the window size of the data. E.g window = 1 means each epoch is in one-minute window.
+#' @param window \code{numeric} The calculation needs the window size of the data. E.g window = 1 means each epoch is in one-minute window.
+#' @param daylevel  \code{logical}   If the cosinor model was run for day-level data. The default value is FALSE while the activity data for all days were used for model fitting. When the value is TRUE, the single day data were used for model fitting.
 #'
 #' @importFrom stats na.omit reshape
 #' @importFrom dplyr group_by %>% do
@@ -102,20 +103,28 @@ ActCosinor2 = function(
 
 ActCosinor_long2 = function(
   count.data,
-  window = 1
+  window = 1,
+  daylevel = FALSE
 ){
-  ID = value = . = NULL
-  rm(list = c("ID", "value", "."))
+  #window = shrink data into Ncol/window columns.
+  ID = Day = value = . = NULL
+  rm(list = c("ID", "Day", "value", "."))
 
   long.count = reshape(count.data, varying = names(count.data)[3:ncol(count.data)],direction = "long",
                        timevar = "Time",idvar = c("ID","Day"),v.names = "values",new.row.names = c(1:((ncol(count.data)-2)*nrow(count.data))))
   long.count = long.count[
     with(long.count, order(ID, Day,Time)),
-    ]
+    ]   # long.count= ID, day, time,values
 
   n1440=ncol(count.data)-2                      #gw 5/5/21
-  result= long.count  %>% group_by(ID) %>% do(out = ActCosinor2(.$values,
+  if (!daylevel) result= long.count  %>% group_by(ID) %>% do(out = ActCosinor2(.$values,
                                                window = window, n1440=n1440))  #gw 5/5/21
+
+
+  if (daylevel) result= long.count  %>% group_by(ID,Day) %>% do(out = ActCosinor2(.$values,
+                                               window = window, n1440=n1440))  #gw 4/28/23  daylevel fitting, output=  ID  Day  ndays mes_1 amp_1 acr_1 acrotime_1
+
+
 
 
   out = unlist(result$out)
@@ -127,7 +136,8 @@ ActCosinor_long2 = function(
   result$acrotime = out[which(names(out) == "acrotime")]
 
   result$out = NULL
-  names(result)[3:6] = paste0(names(result)[3:6],"_",window)
+  last4c<-(ncol(result)-3):ncol(result)
+  names(result)[last4c] = paste0(names(result)[last4c],"_",window)
   return(result)
 
 }

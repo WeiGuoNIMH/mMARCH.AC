@@ -17,13 +17,14 @@ mMARCH.AC.maincall(
   use.cluster = TRUE,
   QCdays.alpha = 7,
   QChours.alpha = 16,
-  QCnights.feature.alpha = c(0, 0),
+  QCnights.feature.alpha = c(0, 0, 0, 0),
   DoubleHour = c("average", "earlier", "later")[1],
   QC.sleepdur.avg = c(3, 12),
-  QC.nblocks.sleep.avg = c(5, 30),
+  QC.nblocks.sleep.avg = c(6, 29),
   Rversion = "R",
   filename2id = NULL,
-  PA.threshold = c(50, 100, 400),
+  PA.threshold = c(40, 100, 400),
+  PA.threshold2 = c(50, 100, 400),
   desiredtz = "US/Eastern",
   RemoveDaySleeper = FALSE,
   part5FN = "WW_L50M100V400_T5A5",
@@ -63,13 +64,15 @@ mMARCH.AC.maincall(
 
 \item{QC.sleepdur.avg}{\code{number}  As taking the deault value of QC.sleepdur.avg=c(3,12), individuals were excluded with an average sleep duration <3 hour or >12 hour.}
 
-\item{QC.nblocks.sleep.avg}{\code{number}  As taking the deault value of QC.nblocks.sleep.avg=c(5,30), individuals were excluded with an average number of nocturnal sleep episodes <5 or >30.}
+\item{QC.nblocks.sleep.avg}{\code{number}  As taking the deault value of QC.nblocks.sleep.avg=c(6,29), individuals were excluded with an average number of nocturnal sleep episodes < 6 or > 29.}
 
 \item{Rversion}{\code{character}  R version, eg. "R/3.6.3". Default is "R".}
 
 \item{filename2id}{\code{R function}  User defined function for converting filename to sample IDs. Default is NULL.}
 
-\item{PA.threshold}{\code{number}  Threshold for light, moderate and vigorous physical activity. Default is c(50,100,400).}
+\item{PA.threshold}{\code{number}  Threshold for light, moderate and vigorous physical activity. Default is c(40,100,400).}
+
+\item{PA.threshold2}{\code{number}  Second threshold for light, moderate and vigorous physical activity. Default is c(50,100,400). The activity features will end with "_C2" for those that were calculated based on PA.threshold2.}
 
 \item{desiredtz}{\code{charcter}  desired timezone: see also http://en.wikipedia.org/wiki/Zone.tab. Used in g.inspectfile(). Default is "US/Eastern". Used in g.inspectfile() function to inspect acceleromether file for brand, sample frequency in module 2.}
 

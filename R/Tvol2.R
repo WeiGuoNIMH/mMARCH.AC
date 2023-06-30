@@ -32,7 +32,7 @@ Tvol2 = function(
   log.multiplier=9250 
 ){
   if(missing(weartime)){
-    print("No weartime supplied, calculated based on defualt from 05:00 to 23:00")
+    message("No weartime supplied, calculated based on defualt from 05:00 to 23:00")
     weartime = wear_flag(count.data =  count.data)
   }
 

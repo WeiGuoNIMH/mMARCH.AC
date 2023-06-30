@@ -27,7 +27,7 @@
 SVDmiss2<-function (X, niter = 200, ncomp = dim(X)[2], conv.reldiff = 0.001) {
 
     ncomp = min(ncol(X),nrow(X),ncomp) #-- gw-- number of components.
-    print(paste("ncomp=",ncomp,sep=""))
+    message(paste("ncomp=",ncomp,sep=""))
     niter <- max(niter, 1)
     if (ncomp < 1) {
         stop("ncomp should be >0, is: ", ncomp)

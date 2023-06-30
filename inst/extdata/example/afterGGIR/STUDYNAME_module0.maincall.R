@@ -1,4 +1,4 @@
- 
+options(width=2000) 
 argv = commandArgs(TRUE);  
 print(argv) 
 print(paste("length=",length(argv),sep=""))  
@@ -30,7 +30,6 @@ filename2id.2<-function(x) {
 mMARCH.AC.shell<-function(mode,filename2id=NULL){ 
 
 library(mMARCH.AC) 
-library(xlsx)
 packageVersion("mMARCH.AC")
 #  ?mMARCH.AC.maincall  # run help to see all argumengts 
 
@@ -47,8 +46,7 @@ oldwd<-getwd()
 setwd(currentdir) 
 
 rmDup=FALSE   # keep all subjects in mMARCH.AC
-PA.threshold=c(40,100,400)
-PA.threshold2=c(50,100,400) 
+PA.threshold=c(50,100,400)
 part5FN="WW_L50M100V400_T5A5" 
 epochIn = 5
 epochOut =  60
@@ -56,7 +54,7 @@ use.cluster = FALSE
 log.multiplier = 9250
 QCdays.alpha = 7
 QChours.alpha = 16 
-QCnights.feature.alpha = c(0,0,0,0)
+QCnights.feature.alpha = c(0,0)
 DoubleHour= "average" 
 QC.sleepdur.avg=NULL
 QC.nblocks.sleep.avg=NULL
@@ -116,7 +114,6 @@ mMARCH.AC.maincall(mode=mode,
           Rversion=Rversion,
           filename2id=filename2id,
           PA.threshold=PA.threshold,
-          PA.threshold2=PA.threshold2, 
           desiredtz=desiredtz,
           RemoveDaySleeper=RemoveDaySleeper,
           part5FN=part5FN,

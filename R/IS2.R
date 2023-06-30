@@ -4,11 +4,12 @@
 #'
 #' @param x  \code{data.frame} of dimension ndays by p, where p is the dimension of the data.
 #'
-#' @references Junrui Di et al. Joint and individual representation of domains of physical activity, sleep, and circadian rhythmicity. Statistics in Biosciences.
-#' @export
+#' @references Junrui Di et al. Joint and individual representation of domains of physical activity, sleep, and circadian rhythmicity. Statistics in Biosciences. 
+#' @return IS
 #'
 #'
- 
+#' @export 
+#'
 
 IS2 = function(
   x

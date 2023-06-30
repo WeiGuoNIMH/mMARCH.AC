@@ -43,7 +43,12 @@
 
 ggir.summary<-function(bindir=NULL, outputdir,studyname, numericID=FALSE,sortByid="filename",subdir="summary",part5FN="WW_L50M125V500_T5A5",QChours.alpha=16, filename2id=NULL, desiredtz="US/Eastern",trace=FALSE){
 
+# source("/vf/users/guow4/project0/GGIR/postGGIR/postGGIR_compile/v2/mMARCH.AC/R/module2_summary.pipeline.R")
+ 
+
+if (trace) print("module2.1 prepare the summary file")
 olddir<-getwd()
+oldpar <- par(no.readonly = TRUE)
  
 if (is.null(filename2id)) {
 filename2id<-function(x) {
@@ -53,13 +58,13 @@ filename2id<-function(x) {
 }   
 } 
 
-
+if (trace) print("module2.2 prepare the summary file")
 ggir.dir<- outputdir  
 workdir<-paste(getwd(),"/",subdir,sep="")
 try(system(paste("mkdir ",workdir,sep="")))
 setwd(workdir)
 on.exit(setwd(workdir)) 
-print(workdir)
+message(workdir)
 
 wg1knife_split<-function(x,k,split="/" ){  #remove folder before bin file
 x<- unlist(strsplit(x,split=split))
@@ -69,6 +74,7 @@ return(y)
 }
 
 
+if (trace) print("module2.3 prepare the summary file")
 outFN<-c("c1.filesummary.csv","c2_iderror.info.csv","c3_Nmissing_summary.csv","c4.Nvaliddays.pdf","c4.Nvaliddays.txt",         "c6.dataMissing.pattern.pdf","c9.part24daysummary.info.csv")
 BDfn<-paste(studyname,"_ggir_output_summary.xlsx",sep="")
 try(system("rm *_ggir_output_summary.xlsx"))
@@ -79,16 +85,20 @@ try(system("rm *_ggir_output_summary.xlsx"))
 # GGIR:   binary data from 'GENEActiv'   and GENEA devices (not for sale), .csv-export data from 'Actigraph' <https://actigraphcorp.com> devices, and .cwa and .wav-format data from 'Axivity' <https://axivity.com>.  
 ##########################################################################################################  
    
-print("1) file lists starts...")
+message("1) file lists starts...")
 
 BD<-NULL #big data as final output  
  
+ggirfiletype<-c(".bin",".csv",".cwa",".wav",".gt3x")
+findfiletype<- function(x) {t<-unlist(strsplit(x,"\\.")); return(paste(".",t[length(t)],sep=""))}
+ 
+
 if (!is.null(bindir)){
 files0<-list.files(path = bindir,recursive = TRUE)
-files1<-unlist(lapply(files0,wg1knife_split,split="/",k=-1))  #remove sub directory
-ggirfiletype<-c(".bin",".csv",".cwa",".wav",".gt3x")
-S1<-NULL; for (s in 1:length(ggirfiletype)) S1<-c(S1,grep(ggirfiletype[s], files1, fixed=T))
-inFN0 <- files1[unique(order(S1))]  
+files1<-unlist(lapply(files0,wg1knife_split,split="/",k=-1))  #remove sub directory 
+filetype<-unlist(lapply(files1,findfiletype))
+ 
+inFN0 <- files1[which(filetype %in% ggirfiletype)]  
 inFN1<-sort(inFN0)
 } else { 
 files0<-list.files(path = paste(ggir.dir,"/meta/basic",sep="") ,recursive = TRUE) 
@@ -123,13 +133,14 @@ ansM<-rbind(ansM,c(2,paste("meta-",S[i],sep=""),length(xinFN1),length(unique(xin
 temp<-rep(".",nrow(BD))
 temp[which(BD[,2] %in% set)]<-"X"
 BD<-cbind(BD,temp)
-if (trace) print(table(temp))
+if (trace) message(table(temp))
 }
  
 #######count Nfiles###########################  
  
 fn<-list() 
 for (i in 1:length(inFN3)){
+
 d<-read.csv(inFN3[i],header=1,stringsAsFactors=F)
 colnames(d)[1:10]
 fn[[i]]<-d[,"filename"]
@@ -141,7 +152,9 @@ ansM<-rbind(ansM,ans)
 temp<-rep(".",nrow(BD))
 temp[which(BD[,2] %in% set)]<-"X"
 BD<-cbind(BD,temp)
-if (trace) print(table(temp))  
+
+#print(c(i,dim(BD),length(temp)))
+#if (trace) message(table(temp))  
 if (i==1) GGIR_version<-as.character(d[1,"GGIR.version"])
 
 } 
@@ -149,7 +162,7 @@ if (i==1) GGIR_version<-as.character(d[1,"GGIR.version"])
 
 colnames(ansM)<-c(GGIR_version,"GGIR_folder","Nrow","Nid","Nmissday","Missing_files")
 # write.csv(ansM,file=outFN[1],row.names=F)
-colnames(BD)<-c("i","filename",S,inFN2) 
+colnames(BD)<-c("i","filename",S,inFN2)   # BD has 14 columns
 
 
 p2sum<-read.csv(inFN3[1],header=1,stringsAsFactors=F)[,c(4,5)] #date=2000-11-25, part2_summary
@@ -166,13 +179,13 @@ write.xlsx(ansM, file=BDfn, sheetName = "2_fileSummary",   col.names = TRUE, row
 # bug: colasu has two input for same day on id=6088
 ##########################################################################################################  
    
-print("2) read part2 day summary file")
+message("2) read part2 day summary file")
 
 d<-read.csv(inFN3[2],header=1,stringsAsFactors=F) # part2_daysummary => newID; NA for missing in part2
 colnames(d)[which(colnames(d) %in% c("id","ID"))]<-"id"   #6/1/2020 ggir2.0 id->ID
 nlast<-ncol(d)
 
-print(c(inFN3[2], dim(d)))
+message(c(inFN3[2], dim(d)))
 dcopy<-d[order(d[,5],decreasing=TRUE),] # keep good Vhour 
 S0<-which(duplicated(paste(dcopy[,2],substr(dcopy[,3],1,10),sep="@")) )   #duplicated(c(1,1,1))= FALSE  TRUE  TRUE
 part2.rmDup_ids<-paste(dcopy[S0,2],dcopy[S0,3],sep="@")
@@ -214,7 +227,7 @@ BD<-cbind(BD,DuplicateIDs)
 # table(d[,1])
 if (numericID) {d.iderror<-d[which(d[,1]!=as.numeric(d[,"newID"])),]} else {  
 d.iderror<-d[which( gsub(" ", "", x=d[,1], fixed = TRUE)!=as.character(unlist(d[,"newID"]))),] }
-print(typeof(d))
+message(typeof(d))
  
 #write.csv(unique(d.iderror[,c(1,2,33)]),file=outFN[2],row.names=F)  
 write.xlsx(unique(d.iderror[,c("id","filename","newID")]), file=BDfn, sheetName = "4_IDerror",   col.names = TRUE, row.names = FALSE,append=TRUE)
@@ -228,13 +241,13 @@ BD<-cbind(BD,IDerrors)
 ##########################################################################################################  
 # (3)   Nmissing days (read  d=part2_daysummary.csv)
 ##########################################################################################################  
-print("3) start to check Nmissing days from L5hr to the last column in GGIR-part2 day summary.")
+message("3) start to check Nmissing days from L5hr to the last column in GGIR-part2 day summary.")
 mainC=(grep("L5hr",colnames(d))[1]):nlast     # default=9:35=ncol(d) for ggir2.4.0 example data
 NmainC<-length(mainC)
 idlist<-unique(d[,sortByid])
 ansM<-NULL
 for (i in 1:length(idlist)){
- if (trace) print(c(i,idlist[i]))
+ if (trace) message(c(i,idlist[i]))
  Swork<-which(d[,sortByid]==idlist[i])
  
 
@@ -243,7 +256,7 @@ for (i in 1:length(idlist)){
  Nmiss<-NULL
  for (j in 1:nrow(work)){  
  Nmiss[j]<-length(which(is.na(work[j,mainC])))
- if (Nmiss[j]<NmainC  & Nmiss[j]>=10)  print(paste("Note: ",Nmiss[j]," missingness at day ",j," for ",idlist[i],sep="") ) 
+ if (Nmiss[j]<NmainC  & Nmiss[j]>=10)  message(paste("Note: ",Nmiss[j]," missingness at day ",j," for ",idlist[i],sep="") ) 
  }#j
  d[Swork,"Nmiss_activity"]<-Nmiss
  
@@ -254,24 +267,24 @@ for (i in 1:length(idlist)){
  }#end if length(Swork) 
 }#end i
  
-if (trace) print(head(ansM))
+if (trace) message(head(ansM))
 ansM<-data.frame(ansM)
 colnames(ansM)<-c("i",sortByid,"Ndays","NmissDays","NcompleteDays") 
 # write.csv(ansM,file=outFN[3],row.names=F)    
-if (trace) print(dim(d))
-if (trace) print(length(unique(d[,sortByid])) )
-if (trace) print(tail(unique(d[,sortByid])))
+if (trace) message(dim(d))
+if (trace) message(length(unique(d[,sortByid])) )
+if (trace) message(tail(unique(d[,sortByid])))
 
 write.xlsx(ansM, file=BDfn, sheetName = "5_NvalidDays",   col.names = TRUE, row.names = FALSE,append=TRUE) 
 BD<-merge(BD,ansM[,-1],by="filename",all=TRUE,sort=FALSE)
 
-if (trace) print("end this part")
+if (trace) message("end this part")
 
 ##########################################################################################################  
 # (4)   Ndays (read  d=part2_daysummary.csv)
 ################################################################
 ##########################################  
-print("4) start to check Ndays")
+message("4) start to check Ndays")
 mycbind<-function(A,B){
 if (is.null(A)) C<-B else {
 C<-array(NA,dim=c(max(nrow(A),nrow(B)),ncol(A)+1+ncol(B)))
@@ -285,7 +298,7 @@ return(C)
 pdf(paste(studyname,"_ggir_output_summary_plot.pdf",sep="")) # ---plot start-----------------
 countD<-NULL
 for (j in 3:5) {
-print(table(ansM[,j]))    
+message(table(ansM[,j]))    
 t<-table(ansM[,j]) 
 f<-cbind(as.numeric(names(t)),as.numeric(t))  
  
@@ -310,11 +323,11 @@ write.xlsx(countD, file=BDfn, sheetName = "6_Ndays_table", showNA=FALSE, col.nam
 # (7)   Missing pattern based on N.valid.hours
 # QChours.alpha=16
 ##########################################################################################################  
-print("5) start to check missing pattern")
+message("5) start to check missing pattern")
 
 missX<-NULL
 Nmiss<-d[,"Nmiss_activity"]
-print(table(Nmiss,useNA="always")) 
+message(table(Nmiss,useNA="always")) 
 S1<-which(d[,"N.valid.hours"]>=QChours.alpha)
 S2<-which(d[,"N.valid.hours"]<QChours.alpha) 
 d[,"missing"]<-NA   
@@ -357,7 +370,7 @@ for (i in 1:length(idlist)){
  for (j in 2:(nrow(work)-1)){
    if ((work[j-1,"missing"]=="C") & (work[j,"missing"]=="M") & (work[j+1,"missing"]=="C")) ans2<-c(ans2,j)}
  Scmc.m<-c(Scmc.m,Swork[ans2])
- #print(length(Scmc.m))
+ #message(length(Scmc.m))
  } #end if work >3 rows
 } 
 
@@ -365,8 +378,9 @@ for (i in 1:length(idlist)){
 # (8)   Day sleeper (pay attention to date format for part2 and part4)
 #  merge sleep.full report for the purpose of (1) define daysleeper (2) sleep Matrix for PA_dur calculation
 # if using clean file, daysleeper=1 : mark; missing will be removed so daysleeper does not matter 
+# part2 .bin calendar_date =2017-10-31T05:15:00-0400;  part4 .bin.RData calendar_date=16/9/2010
 ##########################################################################################################  
-print(paste("6) Mark day sleeper from ",sleepFull.fn,sep=""))
+message(paste("6) Mark day sleeper from ",sleepFull.fn,sep=""))
  
 part4<-read.csv(sleepFull.fn,header=1,stringsAsFactors=F) 
 idsdate<-paste(part4[, "filename"],part4[,"calendar_date"],sep=" ")
@@ -382,21 +396,21 @@ part4[,"daysleeper_ggir"]<-part4[,"daysleeper"]
 part4[,"daysleeper"]<-0
 S4<-which(part4[,"sleeponset"]<36 & part4[,"wakeup"]>36)
 if (length(S4)>=1) part4[S4,"daysleeper"]<-1
-print(table(part4[,c("daysleeper_ggir","daysleeper")]))
+message(table(part4[,c("daysleeper_ggir","daysleeper")]))
 
 d[,"Date"]<-substr(d[,"calendar_date"],1,10)  
 d2 <-merge(d,part4,by=c("filename","Date"),suffix=c("",".2"),all=TRUE)  #filename+ calendar_date 
 
  
-print("   print part2daysummary")
-head(d2)
+message("   print part2daysummary")
+# head(d2)
 write.csv(d2,file="part24daysummary.info.csv",row.names=F)   #c9.part24daysummary.info.csv
  
  
 ##########################################################################################################  
 # (9)  missing pattern
 ##########################################################################################################  
-print( "7) write to a excel file") 
+message( "7) write to a excel file") 
 
 miss.middle<- misspattern[grep("CMC", misspattern, fixed=T)] 
 miss.matrix<-cbind(idlist,misspattern)
@@ -416,27 +430,30 @@ BD[,"newID"]<-unlist(lapply(as.character(unlist(BD[,"filename"])),filename2id))
 
 
 write.xlsx(BD, file=BDfn, sheetName = "9_final", showNA=FALSE, col.names = TRUE, row.names = FALSE,append=TRUE)
-print(dim(BD))
+message(dim(BD))
 BD[,"duplicate"]<-BD[,"DuplicateIDs"]
 write.csv(BD, file=paste(studyname, "_samples_remove_temp.csv",sep=""), row.names = FALSE)
-print(head(BD))
+#  message(head(BD))
  
 ##########################################################################################################  
 # (10)  Inspects accelerometer file for monitor brand, sample frequency and file header
 ########################################################################################################## 
-print("8) Inspects monitor brand,frequency")
+message("8) Inspects monitor brand,frequency")
 
 if (!is.null(bindir)){
 inspect<-NULL
 RData.files1 <-list.files(path = bindir,recursive = TRUE, full.names = TRUE) 
 # RData.files2 <-RData.files1[ grep(".bin",RData.files1)  ] #find .bin.cpgz 
 nchar <-nchar(RData.files1)
-RData.files2 <-RData.files1[which(substr(RData.files1,nchar-3,nchar) %in% ggirfiletype)]
+
+filetype<-unlist(lapply(RData.files1,findfiletype))  
+RData.files2 <-RData.files1[which(filetype %in% ggirfiletype)]
 
 inspect<-NULL
 for ( f in 1:length(RData.files2)){ 
+# print(f)
 t<-NULL
-try(t<-g.inspectfile(datafile= RData.files2[f], desiredtz =  desiredtz ) ) 
+try(t<-g.inspectfile(datafile= RData.files2[f], desiredtz =  desiredtz ) ,silent=TRUE) 
 if (!is.null(t)){temp<-rbind(c("filename",t$filename), 
             c("monitor brand code",t$monc),
             c("monitor name",t$monn),
@@ -446,8 +463,9 @@ if (!is.null(t)){temp<-rbind(c("filename",t$filename),
 temp<-rbind(temp,cbind(rownames(t$header),as.character(unlist(t$header[,1]))) )
 temp2<-t(temp[,2])
 colnames(temp2)<-temp[,1]
-inspect<-rbind(inspect,temp2) 
-}} 
+if (f==1) inspect<-temp2 else inspect<-merge(inspect,temp2,by=intersect(colnames(inspect),colnames(temp2)),all=TRUE)  #very slow
+    ### if (f==1) inspect<-temp2 else {          if (ncol(temp2)==ncol(inspect)) inspect<-rbind(inspect,temp2) else inspect<-merrge(inspect,temp2,by=intersect(colnames(inspect),colnames(temp2)),all=TRUE) }
+}} #f  
 }
 if (is.null(bindir)){
 part2summary<-read.csv(inFN3[1],header=1,stringsAsFactors=F)
@@ -464,7 +482,7 @@ write.xlsx(inspect, file=BDfn, sheetName = "10_deviceInfo", showNA=FALSE, col.na
 ###########################################################
 
 ######################  
-print( "9) plot missing pattern") 
+message( "9) plot missing pattern") 
  
 if ( length(which(d[,"missing"]=="C"))>=1 & length(which(d[,"missing"]=="M"))>=1 ){ 
 fmissing<-d[which(d[,"missing"]=="M"),] 
@@ -476,11 +494,11 @@ hist(d[which(d[,"missing"]=="C"),"N.valid.hours"],main="N valid hours for Comple
 hist(d[which(d[,"missing"]=="M"),"N.valid.hours"],main="N valid hours for missing days",xlab="Hour") 
 plot(d[which(d[,"missing"]=="C"),"N.valid.hours"],main="N valid hours for Complete days",ylab="Hour")
 plot(d[which(d[,"missing"]=="M"),"N.valid.hours"],main="N valid hours for missing days",ylab="Hour")   
-print(paste("The minimum hour for complete days is ",min(d[which(d[,"missing"]=="C"),"N.valid.hours"]),sep=""))
-print(paste("The maximum hour for missing days is ",max(d[which(d[,"missing"]=="M"),"N.valid.hours"]),sep=""))
+message(paste("The minimum hour for complete days is ",min(d[which(d[,"missing"]=="C"),"N.valid.hours"]),sep=""))
+message(paste("The maximum hour for missing days is ",max(d[which(d[,"missing"]=="M"),"N.valid.hours"]),sep=""))
 
 t1<-table(d[which(d[,"measurementday"]==1),"weekday"]) 
-t1<-t1[c("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")] 
+t1<-t1[ c("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday") ] 
 barplot(t1,xlab="First Day",cex.names=0.8)   
 hist(fid[,2],xlab="N_valid_days",main="N valid days for all sampes")
 barplot(table(fmissing[,"measurementday"]),main="Which day is missing",xlab="measurementday")
@@ -498,6 +516,7 @@ hist(d.cmc[,"N.valid.hours"],xlab="N_valid_hours in missing days",main="missing 
 par(mai=c(1.02,2.52,0.82,0.42)) # bottom,left,up,right
 barplot(t6,main="missing pattern (f>=5)",horiz=TRUE,las=2)
 barplot(t6[t6<500],main="missing pattern",horiz=TRUE,las=2)
+ 
 } 
 dev.off()
 }
@@ -505,8 +524,8 @@ dev.off()
  
 setwd(olddir) 
 on.exit(setwd(olddir)) 
-
-print("----End summary of ggir output----")
+on.exit(par(oldpar)) 
+message("----End summary of ggir output----")
 }
  
  
@@ -538,7 +557,7 @@ print("----End summary of ggir output----")
                  csvFN[ grep("900s",csvFN)])  
  
 
-  print(nwFN)
+  message(nwFN)
   if (length(nwFN)>1) stop("please choose which nonwear.data should be used?") 
  
   
@@ -550,8 +569,8 @@ print("----End summary of ggir output----")
   d2<-read.csv(p2FN,header=1,stringsAsFactors=F)
   dim(d1)
   dim(d2)
-  if (trace) print(head(d1))
-  if (trace) print(head(d2))
+  if (trace) message(head(d1))
+  if (trace) message(head(d2))
   d2[,"filename2"]<-paste("meta_",d2[,"filename"],".RData",sep="")
   d2[,"Date"]<-substr(d2[,"calendar_date"],1,10)  # replace calender_date on 6/1/2020
   start<-which(colnames(d1)=="RowNonWear")

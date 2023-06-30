@@ -9,6 +9,9 @@ IS2(x)
 \arguments{
 \item{x}{\code{data.frame} of dimension ndays by p, where p is the dimension of the data.}
 }
+\value{
+IS
+}
 \description{
 This function calcualte interdaily stability, a nonparametric metric
 of circadian rhtymicity

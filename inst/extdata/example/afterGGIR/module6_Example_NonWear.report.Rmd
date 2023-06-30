@@ -1,7 +1,7 @@
 ---
-title: 'postGGIR: NonWear matrix in GGIR outputs '
+title: 'mMARCH.AC module 6: NonWear matrix in GGIR outputs '
 author: "Wei Guo"
-date: "2021-02-19"
+date: "2022-09-20"
 output:
   html_document:
     df_print: paged
@@ -19,13 +19,13 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ```{r ,include=FALSE  }
-currentdir="/data/guow4/project0/GGIR/postGGIR/postGGIR_compile/postGGIR3.0/inst/extdata/example/afterGGIR"
+currentdir="/data/guow4/project0/GGIR/postGGIR/postGGIR_compile/v2/example/afterGGIR"
 studyname="Example"
 bindir=""
-outputdir="/data/guow4/project0/GGIR/postGGIR/postGGIR_compile/postGGIR3.0/inst/extdata/example/GGIR/output_binfile"
+outputdir="/data/guow4/project0/GGIR/postGGIR/postGGIR_compile/v2/example/GGIR/output_binfile"
 epochIn=5
-epochOut=5
-flag.epochOut=60
+epochOut=60
+epochOut=60
 log.multiplier=9250
 
 ```
@@ -292,5 +292,5 @@ How to run this?
 
 
  
-cd /data/guow4/project0/GGIR/postGGIR/postGGIR_compile/postGGIR3.0/inst/extdata/example/afterGGIR   
-R -e "rmarkdown::render('part6_Example_postGGIR.nonwear.report.Rmd'   )" 
+cd /data/guow4/project0/GGIR/postGGIR/postGGIR_compile/v2/example/afterGGIR   
+R -e "rmarkdown::render('module6_Example_NonWear.report.Rmd'   )" 

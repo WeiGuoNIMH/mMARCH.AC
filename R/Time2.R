@@ -98,7 +98,7 @@ Time_long2 = function(
   minuteUnit<-n1440/1440
 
   if(missing(weartime)){
-    print("No weartime supplied, calculated based on defualt from 05:00 to 23:00")
+    message("No weartime supplied, calculated based on defualt from 05:00 to 23:00")
     weartime = wear_flag(count.data =  count.data)
   } else {
   if (length(which(count.data[,1]!= weartime[,1] | count.data[,2]!= weartime[,2]))>=1) stop ("Checking IDs between count.data and weartime in Time_long2 function.") 

@@ -4,7 +4,12 @@
 \alias{RA_long2}
 \title{Relative Amplitude for the Whole Datset}
 \usage{
-RA_long2(count.data, window = 1, method = c("average", "sum"))
+RA_long2(
+  count.data,
+  window = 1,
+  method = c("average", "sum"),
+  noon2noon = FALSE
+)
 }
 \arguments{
 \item{count.data}{\code{data.frame} of dimension n * (p+2) containing the
@@ -18,6 +23,8 @@ window size as an argument. This function is a whole dataset
 wrapper for \code{RA}.}
 
 \item{method}{\code{character} of "sum" or "average", function used to bin the data}
+
+\item{noon2noon}{\code{logical}  Specify if M10 and L5 were calculated from noon to noon. Default is FALSE.}
 }
 \value{
 A \code{data.frame} with the following 3 columns

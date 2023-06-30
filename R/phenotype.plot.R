@@ -36,14 +36,16 @@
  
 pheno.plot<-function(inputFN,outFN=paste("plot_",inputFN,".pdf",sep=""),csv=TRUE,sep=" ",start=3,read=TRUE,logFN=NULL,track=TRUE){ 
 
+
+oldpar <- par(no.readonly = TRUE)
 if (is.null(logFN)) logFN<-paste(inputFN,".log",sep="")
 
 if (read){
 if (csv) d<-read.csv(inputFN,header=1,stringsAsFactors=F) else d<-read.table(inputFN,header=1,sep=sep,stringsAsFactors=F) 
 } else d<-inputFN
 
-if (track) print(head(d)) 
-if (track)  print(dim(d))
+if (track) message(head(d)) 
+if (track)  message(dim(d))
 Nall=nrow(d) 
 
 
@@ -53,21 +55,21 @@ write("###################################################",file=logFN,ncolumns=
  
 report<-NULL
 pdf(outFN)
-if (track) print("plot variables one by one...........")
+if (track) message("plot variables one by one...........")
 for (j in start:ncol(d)){
-if (track) print(paste("drawing pictures on column",j,sep="  "))
+if (track) message(paste("drawing pictures on column",j,sep="  "))
 par(mfrow=c(2,2))
-on.exit(par(mfrow=c(2,2))) 
+
 
 x=as.numeric(d[,j])
-if (track) print(length( which(!is.na(x))) )
+if (track) message(length( which(!is.na(x))) )
 maintitle=paste(colnames(d)[j]," (N=",length(which(!is.na(x)))," / ",Nall,")",sep="")
 
-if (track) print(maintitle)
+if (track) message(maintitle)
 
 
 if (length(which(!is.na(x)))>=1) {
- if (track)  print("This is a numerical variable")
+ if (track)  message("This is a numerical variable")
 
 u=round(mean(x,na.rm=T),2)
 sd=round(sd(x,na.rm=T),2)
@@ -106,11 +108,12 @@ plot.new()
 cov.j<-c("Count", paste(names(t2),t2,sep="="))
 }
 }
+
 if (length( which(!is.na(x)))==0) { 
 par(mfrow=c(1,2))
-on.exit( par(mfrow=c(1,2))  )
+ 
 
-if (track) print("This is a categorical variable") 
+if (track) message("This is a categorical variable") 
 t3<- table(d[,j] ,useNA = "always")
 n=length(t3)
 
@@ -121,13 +124,18 @@ text(2,n+1,labels= "Count:" )
 for (k in 1:length(t3))
 text(4,n-k+1,labels=paste(c(names(t3)[k],"=",t3[k]),collapse=" "))  
 cov.j<-c("Categorical", paste(names(t3),t3,sep="=")) 
+on.exit( par(mfrow=c(1,2))  )
 }
+
 cov.j.write<-paste(c(j,maintitle,cov.j),collapse=" | ")
 write(cov.j.write,file=logFN,ncolumns=1,append=TRUE) 
 report<-rbind(report,cov.j.write)
  
+ 
 }# jth column
 dev.off()
+
+on.exit(par(oldpar))
 rownames(report)<-NULL
 return(report)
 }

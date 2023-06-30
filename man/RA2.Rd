@@ -4,7 +4,7 @@
 \alias{RA2}
 \title{Relative Amplitude}
 \usage{
-RA2(x, window = 1, method = c("average", "sum"))
+RA2(x, window = 1, method = c("average", "sum"), noon2noon = FALSE)
 }
 \arguments{
 \item{x}{\code{vector} vector of activity data}
@@ -13,6 +13,8 @@ RA2(x, window = 1, method = c("average", "sum"))
 window size as an argument.}
 
 \item{method}{\code{character} of "sum" or "average", function used to bin the data}
+
+\item{noon2noon}{\code{logical}  Specify if M10 and L5 were calculated from noon to noon. Default is FALSE.}
 }
 \value{
 RA

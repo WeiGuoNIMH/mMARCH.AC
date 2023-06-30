@@ -14,7 +14,6 @@
 #' @param useIDs.FN \code{character} Filename with or without directory for sample information in CSV format, which inclues "filename" and "duplicate" in the headlines at least. If duplicate="remove",  the accelerometer files will not be used in the data analysis of module 5-7. Defaut is NULL, which makes all accelerometer files will be used in module 5-7.
 #' @param RemoveDaySleeper  \code{logical}  Specify if the daysleeper nights are removed from the calculation of number of valid days for each subject. Default is FALSE. 
 #' @param trace  \code{logical}  Specify if the intermediate results is printed when the function was executed. Default is FALSE. 
-#' @param Step  \code{number}  Specify which of the varaible need to be cleaned. For example, Step = 1 for the "anglez" variable, and Step = 2 for the "enmo" variable. 
 #'
 #' @import  xlsx  
 #'  
@@ -61,19 +60,20 @@
 # part2 summary match the activity data. So we can use part2 in QC.
 #########################################################################  
 
-DataShrink<-function(studyname,outputdir,workdir,QCdays.alpha=7,QChours.alpha=16,summaryFN="../summary/part24daysummary.info.csv",epochIn=5,epochOut=60,useIDs.FN=NULL,RemoveDaySleeper=FALSE,trace=FALSE,Step=1){
+DataShrink<-function(studyname,outputdir,workdir,QCdays.alpha=7,QChours.alpha=16,summaryFN="../summary/part24daysummary.info.csv",epochIn=5,epochOut=60,useIDs.FN=NULL,RemoveDaySleeper=FALSE,trace=FALSE ){
 
 # remove daysleepers
 # remove lines by <16 hours,<7 days (no =)
 # keep samples >=7days (each day>=16 hours)
 # useIDs.FN is the csv file name including "duplicate" column, remove ids="remove"
 # f0=1 ageleZ; f0=1 for enmo
-f0<-Step
+# 9/13/22 step=0, ANGLEX, ANGLEY,ANGLEZ,BFEN,ENMO,MAD,ZCX,ZCY,ZCZ
+ 
 olddir<-getwd()
 
 setwd(workdir)
 on.exit(setwd(workdir)) 
-print(getwd())  
+message(getwd())  
    
   listFN<-list.files(workdir,recursive=TRUE)
   csvFN <-listFN[ grep(".csv",listFN )] 
@@ -82,7 +82,7 @@ print(getwd())
   nwFN <-intersect(csvFN[ grep("nonwearscore",csvFN)],
                  csvFN[ grep("900s",csvFN)])  
  
-  print(nwFN)
+  message(nwFN)
   if (length(nwFN)>1) stop("please choose which nonwear.data should be used?")  
 
 
@@ -94,7 +94,17 @@ nonwear[,"filename"]<-filename2
 nonwear[,"NonWearMin"]<-15*nonwear[,"RowNonWear"]
 
 
-key<-c("ANGLEZ", "ENMO")   
+inputfiles<-list.files(pattern = "^All_*") 
+if (length(inputfiles)==0) stop("No input files such as All_studyname_ENMO.data.csv")
+findkey<-function(x) {
+  t1<-unlist(strsplit(x,"\\_")) 
+  n<-length(t1)
+  t1[n]<-unlist(strsplit(t1[n],"\\."))[1] 
+  return(paste(t1[-c(1,2)],collapse="_"))
+} 
+
+key<-unlist(lapply(inputfiles,findkey)) 
+#key<-c("ANGLEZ", "ENMO")   
 inFN <-paste("All_",studyname,"_",key,".data.csv",sep="") 
 outFN1<-paste("flag_","All_",studyname,"_",key,".data.",epochIn,"s.csv",sep="")  
 outFN2<-paste("flag_","All_",studyname,"_",key,".data.",epochOut,"s.csv",sep="")  
@@ -114,7 +124,7 @@ outFN2<-paste("flag_","All_",studyname,"_",key,".data.",epochOut,"s.csv",sep="")
 #   S1<-which(part2ds.nw[,"daysleeper"]==1 | part2ds.nw[,"Nvalid.night"]< QCdays.alpha | part2ds.nw[,"N.valid.hours"]<QChours.alpha ) 
 ################################################################  
  
-print(paste("Begin to read summary file: ",summaryFN,sep=""))
+message(paste("Begin to read summary file: ",summaryFN,sep=""))
 part2ds<-read.csv(summaryFN,header=1,stringsAsFactors=F)
 try(colnames(part2ds)[colnames(part2ds)=="calender_date"]<-"calendar_date") 
 
@@ -125,27 +135,27 @@ ds<-part2ds[,selC]  #data summary
 
 # ds[,"Date"]<-substr(ds[,"calendar_date"],1,10)  
 part2ds.nw0<-merge(ds,nonwear,by=c("filename","Date"),all=TRUE)
-print(table(part2ds.nw0[,"daysleeper"]))
+message(table(part2ds.nw0[,"daysleeper"]))
 
 
 # create Nvalid.day for final imputation...........................
-for (f in f0:f0){
+for (f in 1:length(inFN)){
  
 d<-read.csv(inFN[f],header=1, comment.char = "#",stringsAsFactors=F) 
 S0<-which(d[,"filename"]=="# filename") 
 if (length(S0)>=1) d<-d[-S0,]
-print(paste(c("input data =",dim(d)),collapse=" "))
-if (trace) print(d[1,1]) # skip the # lines in All*csv files.
+message(paste(c("input data =",dim(d)),collapse=" "))
+if (trace) message(d[1,1]) # skip the # lines in All*csv files.
 filename2 <- gsub(pattern= ".RData.csv", replacement = "" ,x= d[,"filename"])    
 d[,"filename"]<-filename2
 
-print(paste(f,": read ",ifelse(f==1,"AngleZ","ENMO")," data and prepare headCol",sep=""))
+message(paste(f,": read ",key[f]," data and prepare headCol",sep=""))
 # ------- prepare head info --------
 # 16hours7days removing:
 
 S9<-which(paste(part2ds.nw0[, "filename"],part2ds.nw0[,"Date"],sep="@") %in% paste(d[, "filename"],d[,"Date"],sep="@"))
 part2ds.nw<- part2ds.nw0[S9,] 
-print(table(part2ds.nw[,"daysleeper"]))
+message(table(part2ds.nw[,"daysleeper"]))
 
 #  if removing daysleepers in imputation.-----------------
    part2ds.nw[,"Nvalid.day"]<-NA
@@ -153,9 +163,9 @@ print(table(part2ds.nw[,"daysleeper"]))
    if (!RemoveDaySleeper) part2ds.nw[k,"Nvalid.day"]<-length(which(part2ds.nw[,"filename"]==part2ds.nw[k,"filename"] & part2ds.nw[,"missing"]=="C"  ))    
    if (RemoveDaySleeper)  part2ds.nw[k,"Nvalid.day"]<-length(which(part2ds.nw[,"filename"]==part2ds.nw[k,"filename"] & part2ds.nw[,"missing"]=="C" & ( is.na(part2ds.nw[,"daysleeper"]) | part2ds.nw[,"daysleeper"]==0)  ))  
 
-   if (trace) print(c(k,part2ds.nw[k,"Nvalid.day"]))
+   if (trace) message(c(k,part2ds.nw[k,"Nvalid.day"]))
    }
-   if (trace) print(table(part2ds.nw[,"Nvalid.day"]))
+   if (trace) message(table(part2ds.nw[,"Nvalid.day"]))
  
 part2ds.nw[,"remove16h7day"]<-0  
 S1<-which( part2ds.nw[,"Nvalid.day"]< QCdays.alpha | part2ds.nw[,"N.valid.hours"]<QChours.alpha ) 
@@ -169,7 +179,7 @@ useIDs.matrix<-read.csv(useIDs.FN,header=1,stringsAsFactors=F)
 S2<-which(part2ds.nw[,"filename"] %in% useIDs.matrix[which(useIDs.matrix[,"duplicate"]=="remove"),"filename"])
 part2ds.nw[S2,"duplicate"]<-"remove" 
 }
-if (trace) print(head(part2ds.nw)) 
+if (trace) message(head(part2ds.nw)) 
 #-----------------------------------
 
 dim(d)
@@ -178,14 +188,14 @@ dmer<-merge(part2ds.nw,d,by=c("filename","Date"),all.x=F,all.y=TRUE,sort=FALSE)
 dim(d)
 dim(part2ds)
 dim(dmer)
-if (trace) print(dmer[2,1:40] )
+if (trace) message(dmer[2,1:40] )
 
 write.csv(dmer,file=outFN1[f],row.names=F)
 
 #################---------------------------------------######################
 if (epochIn< epochOut){
   
-  print("we will shrink the data")
+  message("we will shrink the data")
    
   Nsec<-60/epochIn
   myser<-c(paste(0,0:9,sep=""),10:99)
@@ -200,7 +210,7 @@ if (epochIn< epochOut){
   Nwindow<-24*3600/epochOut
  
   Data <-read.csv(outFN1[f],header=1,stringsAsFactors=F)
-  if (trace) print(dim(Data))
+  if (trace) message(dim(Data))
 
   StartC<-which(colnames(Data)=="X00.00.00")
   if (!StartC>=1) stop("Check X00.00.00 on the input data")
@@ -214,7 +224,7 @@ if (epochIn< epochOut){
   newColname <- unlist(lapply(colnames(Data[,StartC:ncol(Data)]), timestamp.switch)) 
   colnames(Data.trans.imp)<- newColname
 
-  if ( Nwindow*Lwindow!=ncol(Data.trans.imp)) print ("N*L!=ncol(Data): mismatch due to error or 25hours")
+  if ( Nwindow*Lwindow!=ncol(Data.trans.imp)) message ("N*L!=ncol(Data): mismatch due to error or 25hours")
   Data.trans.imp.shrink<-array(NA,dim=c(nrow(Data.trans.imp),Nwindow))
   for (j in 1:Nwindow){
   a= (j-1)*Lwindow+1
@@ -222,27 +232,27 @@ if (epochIn< epochOut){
   abname<-timeSer24h[a:b]
   abname.index<-which(colnames(Data.trans.imp) %in% abname)
   if (length(abname.index)>length(abname) ) { 
-      print(c("25hour: ",a,abname[1],length(abname),length(abname.index))) }
+      message(c("25hour: ",a,abname[1],length(abname),length(abname.index))) }
   if (nrow(Data.trans.imp)>1 & length(abname.index)>1 ) {
        Data.trans.imp.shrink[,j]<-as.vector(rowMeans(Data.trans.imp[,abname.index],na.rm=TRUE)) } 
   if (nrow(Data.trans.imp)>=1 & length(abname.index)==1 ) {
        Data.trans.imp.shrink[,j]<- Data.trans.imp[,abname.index]  }
   if (nrow(Data.trans.imp)==1 & length(abname.index)>=1 ) {
        Data.trans.imp.shrink[,j]<- mean(Data.trans.imp[,abname.index],na.rm=TRUE) }
-  # print(c(j,length(abname.index),Data.trans.imp.shrink[,j]))
-  # print(c(j,nrow(Data.trans.imp),length(abname.index)))
+  # message(c(j,length(abname.index),Data.trans.imp.shrink[,j]))
+  # message(c(j,nrow(Data.trans.imp),length(abname.index)))
  } 
   colnames(Data.trans.imp.shrink)<-timeSer24h[(1:Nwindow-1)*Lwindow+1]
   rownames(Data.trans.imp.shrink)<-rownames(Data.trans.imp)
   Data.after<-cbind(Data.head,Data.trans.imp.shrink)
-  if (trace) print(dim(Data.after))
-  if (trace) print(Data.after[2,1:40])
+  if (trace) message(dim(Data.after))
+  if (trace) message(Data.after[2,1:40])
 
   write.csv(Data.after,file=outFN2[f],row.names=F)
-  print(paste("Write shrink file into ",outFN2[f],sep=""))
+  message(paste("Write shrink file into ",outFN2[f],sep=""))
 }  #if shrink
  
-print("end------------------") 
+message("end------------------") 
 }  #f
 setwd(olddir) 
 on.exit(setwd(olddir))  

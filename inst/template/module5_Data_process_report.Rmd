@@ -200,7 +200,7 @@ plot(data[,"RowNonWear23"]/4 ,xlab="index of days/ids",ylab="NonWear Hours" ,col
 #plot(data[,"RowNonWear23"]/4,data[,"N.hours"]-data[,"N.valid.hours"],xlab="NonWear Time",ylab="Invalid Hours",main=studyname) 
 #               15minutes /60= 1/4
  
-data2<-aggregate(data$RowNonWear23, by=list(Category=data$filename2), FUN=mean,na.rm=TRUE) #nonwear=2,3, unit=15minutes
+data2<-aggregate(data$RowNonWear23, by=list(Category=data$filename2), FUN=mean,na.rm=TRUE,na.action=na.pass) #nonwear=2,3, unit=15minutes
 plot(data2[,2]/4,  xlab="Subject",ylab="Subject mean of NonWear hours", col="blue")
 hist(data2[,2]/4,  xlab="Subject mean of NonWear hours" , col="orange",main="")
 ```
@@ -266,7 +266,11 @@ Under the  `r paste( currentdir,"/data/",  sep="")` directory,
  
 
 ```{r c21ansM , echo=FALSE }  
-inFN<-paste(currentdir,"/data/impu.flag_All_",studyname,"_ENMO.data.",epochOut,"s.csv",sep="")
+  
+summaryFN1<-paste(currentdir,"/summary/",studyname,"_ggir_output_summary.xlsx",sep="")
+summaryP2<-read.xlsx( summaryFN1,head=0,sheetName = "2_fileSummary")  
+ggirV<-as.character(gsub("X","",summaryP2[1,1]))  
+inFN<-paste(currentdir,"/data/impu.flag_All_",studyname,"_ENMO.data.",epochOut,"s.GGIR",ggirV,".csv",sep="")
 D<-read.csv(inFN,head=1, stringsAsFactors=FALSE) 
 
 #dim(D)

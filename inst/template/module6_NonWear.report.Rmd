@@ -109,8 +109,9 @@ temp<-gsub("meta_","",data[,"filename"])
 data["filename"]<-gsub(".RData","",temp)  
 nonwear.mer<-merge(idM,data[,-3],by=c("filename","Date"),all.x=FALSE,all.y=TRUE)
 dim(nonwear.mer)
-Ctop<-which(colnames(nonwear.mer)=="X00.00.00")-1
-  
+#Ctop<-which(colnames(nonwear.mer)=="X00.00.00")-1
+Ctop<-min(which(colnames(nonwear.mer) %in% c("X","X00.00.00","X00.15.00")))-1  #5/12/23 bats2.9.1 first col ="" not 00:00:00
+
 # nonwear matrix, NW, 96 columns for normal data, 100 columns for time change day; 00:00:00 00:15:00 ... 23:45:00 
 NW<-nonwear.mer[,(Ctop+1):ncol(nonwear.mer)] 
 dim(NW)

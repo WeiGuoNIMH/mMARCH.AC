@@ -8,7 +8,8 @@ ActExtendCosinor_long2(
   count.data,
   window = 1,
   lower = c(0, 0, -1, 0, -3),
-  upper = c(Inf, Inf, 1, Inf, 27)
+  upper = c(Inf, Inf, 1, Inf, 27),
+  daylevel = FALSE
 )
 }
 \arguments{
@@ -18,12 +19,14 @@ The first two columns have to be ID and Day. ID can be
 either \code{character} or \code{numeric}. Day has to be \code{numeric} indicating
 the sequence of days within each subject.}
 
-\item{window}{The calculation needs the window size of the data. E.g window = 1 means each epoch is in one-minute window.
+\item{window}{\code{numeric} The calculation needs the window size of the data. E.g window = 1 means each epoch is in one-minute window.
 window size as an argument.}
 
-\item{lower}{A numeric vector of lower bounds on each of the five parameters (in the order of minimum, amplitude, alpha, beta, acrophase) for the NLS. If not given, the default lower bound for each parameter is set to \code{-Inf}.}
+\item{lower}{\code{numeric} A numeric vector of lower bounds on each of the five parameters (in the order of minimum, amplitude, alpha, beta, acrophase) for the NLS. If not given, the default lower bound for each parameter is set to \code{-Inf}.}
 
-\item{upper}{A numeric vector of upper bounds on each of the five parameters (in the order of minimum, amplitude, alpha, beta, acrophase) for the NLS. If not given, the default lower bound for each parameter is set to \code{Inf}}
+\item{upper}{\code{numeric} A numeric vector of upper bounds on each of the five parameters (in the order of minimum, amplitude, alpha, beta, acrophase) for the NLS. If not given, the default lower bound for each parameter is set to \code{Inf}}
+
+\item{daylevel}{\code{logical}  If the cosinor model was run for day-level data. The default value is FALSE while the activity data for all days were used for model fitting. When the value is TRUE, the single day data were used for model fitting.}
 }
 \value{
 A \code{data.frame} with the following 5 columns
