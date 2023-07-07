@@ -1,0 +1,5226 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Wei Guo" />
+
+<meta name="date" content="2023-07-07" />
+
+<title>mMARCH.AC: An Open-Source R/R-Markdown Package for Processing of Accelerometry Data with GGIR in Motor Activity Research Consortium for Health (mMARCH)</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+<script>$(document).ready(function(){
+    if (typeof $('[data-toggle="tooltip"]').tooltip === 'function') {
+        $('[data-toggle="tooltip"]').tooltip();
+    }
+    if ($('[data-toggle="popover"]').popover === 'function') {
+        $('[data-toggle="popover"]').popover();
+    }
+});
+</script>
+<style type="text/css">
+.lightable-minimal {
+border-collapse: separate;
+border-spacing: 16px 1px;
+width: 100%;
+margin-bottom: 10px;
+}
+.lightable-minimal td {
+margin-left: 5px;
+margin-right: 5px;
+}
+.lightable-minimal th {
+margin-left: 5px;
+margin-right: 5px;
+}
+.lightable-minimal thead tr:last-child th {
+border-bottom: 2px solid #00000050;
+empty-cells: hide;
+}
+.lightable-minimal tbody tr:first-child td {
+padding-top: 0.5em;
+}
+.lightable-minimal.lightable-hover tbody tr:hover {
+background-color: #f5f5f5;
+}
+.lightable-minimal.lightable-striped tbody tr:nth-child(even) {
+background-color: #f5f5f5;
+}
+.lightable-classic {
+border-top: 0.16em solid #111111;
+border-bottom: 0.16em solid #111111;
+width: 100%;
+margin-bottom: 10px;
+margin: 10px 5px;
+}
+.lightable-classic tfoot tr td {
+border: 0;
+}
+.lightable-classic tfoot tr:first-child td {
+border-top: 0.14em solid #111111;
+}
+.lightable-classic caption {
+color: #222222;
+}
+.lightable-classic td {
+padding-left: 5px;
+padding-right: 5px;
+color: #222222;
+}
+.lightable-classic th {
+padding-left: 5px;
+padding-right: 5px;
+font-weight: normal;
+color: #222222;
+}
+.lightable-classic thead tr:last-child th {
+border-bottom: 0.10em solid #111111;
+}
+.lightable-classic.lightable-hover tbody tr:hover {
+background-color: #F9EEC1;
+}
+.lightable-classic.lightable-striped tbody tr:nth-child(even) {
+background-color: #f5f5f5;
+}
+.lightable-classic-2 {
+border-top: 3px double #111111;
+border-bottom: 3px double #111111;
+width: 100%;
+margin-bottom: 10px;
+}
+.lightable-classic-2 tfoot tr td {
+border: 0;
+}
+.lightable-classic-2 tfoot tr:first-child td {
+border-top: 3px double #111111;
+}
+.lightable-classic-2 caption {
+color: #222222;
+}
+.lightable-classic-2 td {
+padding-left: 5px;
+padding-right: 5px;
+color: #222222;
+}
+.lightable-classic-2 th {
+padding-left: 5px;
+padding-right: 5px;
+font-weight: normal;
+color: #222222;
+}
+.lightable-classic-2 tbody tr:last-child td {
+border-bottom: 3px double #111111;
+}
+.lightable-classic-2 thead tr:last-child th {
+border-bottom: 1px solid #111111;
+}
+.lightable-classic-2.lightable-hover tbody tr:hover {
+background-color: #F9EEC1;
+}
+.lightable-classic-2.lightable-striped tbody tr:nth-child(even) {
+background-color: #f5f5f5;
+}
+.lightable-material {
+min-width: 100%;
+white-space: nowrap;
+table-layout: fixed;
+font-family: Roboto, sans-serif;
+border: 1px solid #EEE;
+border-collapse: collapse;
+margin-bottom: 10px;
+}
+.lightable-material tfoot tr td {
+border: 0;
+}
+.lightable-material tfoot tr:first-child td {
+border-top: 1px solid #EEE;
+}
+.lightable-material th {
+height: 56px;
+padding-left: 16px;
+padding-right: 16px;
+}
+.lightable-material td {
+height: 52px;
+padding-left: 16px;
+padding-right: 16px;
+border-top: 1px solid #eeeeee;
+}
+.lightable-material.lightable-hover tbody tr:hover {
+background-color: #f5f5f5;
+}
+.lightable-material.lightable-striped tbody tr:nth-child(even) {
+background-color: #f5f5f5;
+}
+.lightable-material.lightable-striped tbody td {
+border: 0;
+}
+.lightable-material.lightable-striped thead tr:last-child th {
+border-bottom: 1px solid #ddd;
+}
+.lightable-material-dark {
+min-width: 100%;
+white-space: nowrap;
+table-layout: fixed;
+font-family: Roboto, sans-serif;
+border: 1px solid #FFFFFF12;
+border-collapse: collapse;
+margin-bottom: 10px;
+background-color: #363640;
+}
+.lightable-material-dark tfoot tr td {
+border: 0;
+}
+.lightable-material-dark tfoot tr:first-child td {
+border-top: 1px solid #FFFFFF12;
+}
+.lightable-material-dark th {
+height: 56px;
+padding-left: 16px;
+padding-right: 16px;
+color: #FFFFFF60;
+}
+.lightable-material-dark td {
+height: 52px;
+padding-left: 16px;
+padding-right: 16px;
+color: #FFFFFF;
+border-top: 1px solid #FFFFFF12;
+}
+.lightable-material-dark.lightable-hover tbody tr:hover {
+background-color: #FFFFFF12;
+}
+.lightable-material-dark.lightable-striped tbody tr:nth-child(even) {
+background-color: #FFFFFF12;
+}
+.lightable-material-dark.lightable-striped tbody td {
+border: 0;
+}
+.lightable-material-dark.lightable-striped thead tr:last-child th {
+border-bottom: 1px solid #FFFFFF12;
+}
+.lightable-paper {
+width: 100%;
+margin-bottom: 10px;
+color: #444;
+}
+.lightable-paper tfoot tr td {
+border: 0;
+}
+.lightable-paper tfoot tr:first-child td {
+border-top: 1px solid #00000020;
+}
+.lightable-paper thead tr:last-child th {
+color: #666;
+vertical-align: bottom;
+border-bottom: 1px solid #00000020;
+line-height: 1.15em;
+padding: 10px 5px;
+}
+.lightable-paper td {
+vertical-align: middle;
+border-bottom: 1px solid #00000010;
+line-height: 1.15em;
+padding: 7px 5px;
+}
+.lightable-paper.lightable-hover tbody tr:hover {
+background-color: #F9EEC1;
+}
+.lightable-paper.lightable-striped tbody tr:nth-child(even) {
+background-color: #00000008;
+}
+.lightable-paper.lightable-striped tbody td {
+border: 0;
+}
+</style>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">mMARCH.AC: An Open-Source R/R-Markdown
+Package for Processing of Accelerometry Data with GGIR in Motor Activity
+Research Consortium for Health (mMARCH)</h1>
+<h4 class="author">Wei Guo</h4>
+<h4 class="date">July 07, 2023</h4>
+
+
+
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<div id="what-is-ggir" class="section level2">
+<h2>What is GGIR?</h2>
+<p><a href="https://CRAN.R-project.org/package=GGIR">GGIR</a> is an
+R-package to process multi-day raw accelerometer data for physical
+activity and sleep research. GGIR will write all output files into two
+sub-directories of ./meta and ./results. GGIR is increasingly being used
+by a number of academic institutes across the world.</p>
+</div>
+<div id="what-is-mmarch.ac" class="section level2">
+<h2>What is mMARCH.AC?</h2>
+<p><a href="https://CRAN.R-project.org/package=mMARCH.AC">mMARCH.AC</a>
+is an R-package to data processing after running GGIR for accelerometer
+data. In detail, all necessary R/Rmd/shell files were generated for data
+processing after running GGIR for accelerometer data. Then in module 1,
+all csv files in the GGIR output directory were read, transformed and
+then merged. In module 2, the GGIR output files were checked and
+summarized in one excel sheet. In module 3, the merged data was cleaned
+according to the number of valid hours on each night and the number of
+valid days for each subject. In module 4, the cleaned activity data was
+imputed by the average ENMO over all the valid days for each subject.
+Finally, a comprehensive report of data processing was created using
+Rmarkdown, and the report includes few explortatory plots and multiple
+commonly used features extracted from minute level actigraphy data in
+module 5-7. This vignette provides a general introduction to
+mMARCH.AC.</p>
+</div>
+<div id="software-architecture" class="section level2">
+<h2>Software Architecture</h2>
+<p>The R package mMARCH.AC has been released with an open-source GPL-3
+license on CRAN, and mMARCH.AC can run on Windows and Linux. Parallel
+computing in Linux is recommended due to the memory requirements
+associated with reading in multiple of the large data files. The package
+contains one primary function for users which, when run, generates all
+necessary R/R Markdown/shell executable files for data processing after
+running GGIR for accelerometer data; load, read, transform and merge
+long activity data; examine and summarize GGIR outputs; clean the merged
+activity data according to the number of valid hours per night and the
+number of valid days per subject; activity data imputation by taking the
+average across the valid days for each subject; build a comprehensive
+report of data processing and exploratory plots; extract multiple
+commonly used features and study feature structure by the covariance
+decomposition. Figure 1 presents a flowchart for each step in this
+process which is described in greater detail below. The procedure, R
+functions, inputs, and outputs are all described in this package
+vignette. In addition, more documentation and example data could be
+found in mMARCH.AC repository on GitHub (URL: <a href="https://github.com/WeiGuoNIMH/mMARCH.AC" class="uri">https://github.com/WeiGuoNIMH/mMARCH.AC</a>).</p>
+</div>
+</div>
+<div id="section" class="section level1">
+<h1></h1>
+<p>Mirroring the GGIR structure of processing individual data files in
+multiple parts, the mMARCH.AC package is split into seven modules,
+grouping functionalities in logical processing order. The modules are
+numbered from 1 to 7. modules 1 to 4 are dedicated to data processing.
+modules 5 to 7 are dedicated to producing R Markdown reports of data
+cleaning, feature extraction, and unsupervised covariance decomposition
+via the joint and individual variance explained (JIVE) method,
+respectively. These seven modules are carried out sequentially with
+milestone data automatically being saved locally. To use mMARCH.AC, the
+first step for users is to install and load the mMARCH.AC package. Then,
+users run the create.shell() function which creates a single R script.
+The newly created R script, Studyname_module0.maincall.R, is then edited
+by users, allowing for the specification of arguments relevant for each
+of the seven modules. All optional arguments and their defaults are
+described in the package vignette. In addition, for users with access to
+a cluster for parallel processing, a shell function, named as
+module9_swarm.sh is created which can parallelizes the processing of
+individual files with minor modifications by the user. These
+modifications are described in the package vignette. Computationally,
+module 1 is the most time-consuming task, taking up at least 60% of the
+processing time, which the activity data in .csv format was transformed
+and merged. Generally, module 1 takes about 10~30 minutes to process a
+file with 14 days of data recorded at 30 Hz on a GeneActiv device in
+processor cores of 36 x 2.3 GHz (Intel Gold 6140). All output created
+for each module is described in the package vignette. Briefly, module 1
+and module 2 output are saved using a directory structure with a depth
+of two, containing output data and summary for all participants. The
+reports for modules 5 to 7 are saved in .html format and are generated
+using R Markdown (.Rmd) files. These .Rmd files are included in the
+output, users the flexibility to adapt the source code to their research
+purpose.</p>
+</div>
+<div id="section-1" class="section level1">
+<h1></h1>
+<div id="software-dependencies" class="section level2">
+<h2>Software Dependencies</h2>
+<p>All mMARCH.AC code is written in R and reports generated in R
+Markdown. The R packages ActFrag and ActCR are used for the calculation
+of certain physical activity and circadian rhythmicity features. The R
+package r.jive is used to perform the feature interaction analysis and
+to study the joint and individual variation structure by JIVE.</p>
+</div>
+</div>
+<div id="section-2" class="section level1">
+<h1></h1>
+</div>
+<div id="setting-up-your-work-environment" class="section level1">
+<h1>Setting up your work environment</h1>
+<div id="install-r-and-rstudio" class="section level2">
+<h2>Install R and RStudio</h2>
+<p><a href="https://cran.r-project.org/">Download and install R</a></p>
+<p><a href="https://www.rstudio.com/products/rstudio">Download and
+install RStudio</a> (optional, but recommended)</p>
+<p>Download GGIR with its dependencies, you can do this with one command
+from the console command line:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">&quot;mMARCH.AC&quot;</span>, <span class="at">dependencies =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+</div>
+<div id="prepare-folder-structure" class="section level2">
+<h2>Prepare folder structure</h2>
+<ol style="list-style-type: decimal">
+<li>folder of .bin files for GGIR or a file listing all .bin files
+<ul>
+<li>R program will check the missing in the GGIR output by comparing
+with all raw .bin files</li>
+</ul></li>
+<li>foder of the GGIR output with two sub-folders
+<ul>
+<li>meta (./basic, ./csv, etc)<br />
+</li>
+<li>results (module<em>summary</em>.csv)</li>
+</ul></li>
+</ol>
+</div>
+</div>
+<div id="quick-start" class="section level1">
+<h1>Quick start</h1>
+<div id="create-a-template-shell-script-of-mmarch.ac" class="section level2">
+<h2>Create a template shell script of mMARCH.AC</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mMARCH.AC) </span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">create.shell</span>()</span></code></pre></div>
+<p>The function will create a template shell script of mMARCH.AC in the
+current directory, names as <em>STUDYNAME_module0.maincall.R</em>.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> STUDYNAME_module0.maincall.R</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>argv <span class="ot">=</span> <span class="fu">commandArgs</span>(<span class="cn">TRUE</span>);  </span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(argv) </span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">paste</span>(<span class="st">&quot;length=&quot;</span>,<span class="fu">length</span>(argv),<span class="at">sep=</span><span class="st">&quot;&quot;</span>))  </span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>mode<span class="ot">&lt;-</span><span class="fu">as.numeric</span>(argv[<span class="dv">1</span>])  </span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">c</span>(<span class="st">&quot;mode =&quot;</span>, mode))</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># (Note) Please remove the above lines if you are running this within R console </span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co">#        instead of submitting jobs to a cluster.</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="do">#########################################################################   </span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co"># (user-define 1) you need to redefine this according different study!!!!</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="do">######################################################################### </span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co"># example 1 </span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>filename2id<span class="fl">.1</span><span class="ot">&lt;-</span><span class="cf">function</span>(x)  <span class="fu">unlist</span>(<span class="fu">strsplit</span>(x,<span class="st">&quot;</span><span class="sc">\\</span><span class="st">.&quot;</span>))[<span class="dv">1</span>] </span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="co">#  example 2 (use csv file =c(&quot;filename&quot;,&quot;ggirID&quot;)) </span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>filename2id<span class="fl">.2</span><span class="ot">&lt;-</span><span class="cf">function</span>(x) {</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  d<span class="ot">&lt;-</span><span class="fu">read.csv</span>(<span class="st">&quot;./mMARCH.AC/inst/extdata/example/filename2id.csv&quot;</span>,<span class="at">head=</span><span class="dv">1</span>,<span class="at">stringsAsFactors=</span>F)</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>  y1<span class="ot">&lt;-</span><span class="fu">which</span>(d[,<span class="st">&quot;filename&quot;</span>]<span class="sc">==</span>x)</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(y1)<span class="sc">==</span><span class="dv">0</span>) <span class="fu">stop</span>(<span class="fu">paste</span>(<span class="st">&quot;Missing &quot;</span>,x,<span class="st">&quot; in filename2id.csv file&quot;</span>,<span class="at">sep=</span><span class="st">&quot;&quot;</span>))</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(y1)<span class="sc">&gt;=</span><span class="dv">1</span>) y2<span class="ot">&lt;-</span>d[y1[<span class="dv">1</span>],<span class="st">&quot;newID&quot;</span>] </span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">as.character</span>(y2))</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>} </span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="do">#########################################################################  </span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a><span class="co">#  main call</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a><span class="do">######################################################################### </span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>mMARCH.AC.shell<span class="ot">&lt;-</span><span class="cf">function</span>(mode,<span class="at">filename2id=</span><span class="cn">NULL</span>){ </span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mMARCH.AC) </span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a><span class="fu">packageVersion</span>(<span class="st">&quot;mMARCH.AC&quot;</span>)</span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a><span class="co">#  ?mMARCH.AC.maincall  # run help to see all argumengts </span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a><span class="do">#########################################################################  </span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a><span class="co"># (user-define 2) Fill in parameters of your ggir output</span></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a><span class="do">########################################################################## </span></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>currentdir <span class="ot">=</span> </span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>studyname <span class="ot">=</span></span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>bindir <span class="ot">=</span> </span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>outputdir <span class="ot">=</span>  </span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a><span class="fu">setwd</span>(currentdir) </span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>rmDup<span class="ot">=</span><span class="cn">FALSE</span>   <span class="co"># keep all subjects in mMARCH.AC</span></span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>PA.threshold<span class="ot">=</span><span class="fu">c</span>(<span class="dv">50</span>,<span class="dv">100</span>,<span class="dv">400</span>)</span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>part5FN<span class="ot">=</span><span class="st">&quot;WW_L50M100V400_T5A5&quot;</span> </span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>epochIn <span class="ot">=</span> <span class="dv">5</span></span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>epochOut <span class="ot">=</span>  <span class="dv">60</span></span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>use.cluster <span class="ot">=</span> <span class="cn">FALSE</span></span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>log.multiplier <span class="ot">=</span> <span class="dv">9250</span></span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a>QCdays.alpha <span class="ot">=</span> <span class="dv">7</span></span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a>QChours.alpha <span class="ot">=</span> <span class="dv">16</span> </span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a>QCnights.feature.alpha <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>)</span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>DoubleHour<span class="ot">=</span> <span class="st">&quot;average&quot;</span> </span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a>QC.sleepdur.avg<span class="ot">=</span><span class="cn">NULL</span></span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>QC.nblocks.sleep.avg<span class="ot">=</span><span class="cn">NULL</span></span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a>useIDs.FN<span class="ot">=</span><span class="cn">NULL</span> </span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a>Rversion<span class="ot">=</span><span class="st">&quot;R&quot;</span> </span>
+<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a>desiredtz<span class="ot">=</span><span class="st">&quot;US/Eastern&quot;</span> </span>
+<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a>RemoveDaySleeper<span class="ot">=</span><span class="cn">FALSE</span>  </span>
+<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a>NfileEachBundle<span class="ot">=</span><span class="dv">20</span> </span>
+<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a>holidayFN<span class="ot">=</span><span class="cn">NULL</span></span>
+<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a>trace<span class="ot">=</span><span class="cn">FALSE</span></span>
+<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a><span class="do">#########################################################################  </span></span>
+<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a><span class="co">#   remove duplicate sample IDs for plotting and feature extraction </span></span>
+<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a><span class="do">######################################################################### </span></span>
+<span id="cb4-69"><a href="#cb4-69" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (mode<span class="sc">==</span><span class="dv">3</span> <span class="sc">&amp;</span> rmDup){</span>
+<span id="cb4-70"><a href="#cb4-70" aria-hidden="true" tabindex="-1"></a><span class="co"># step 1: read ./summary/*remove_temp.csv file (output of mode=2)</span></span>
+<span id="cb4-71"><a href="#cb4-71" aria-hidden="true" tabindex="-1"></a>keep.last<span class="ot">&lt;-</span><span class="cn">TRUE</span> <span class="co">#keep the latest visit for each sample</span></span>
+<span id="cb4-72"><a href="#cb4-72" aria-hidden="true" tabindex="-1"></a>sumdir<span class="ot">&lt;-</span><span class="fu">paste</span>(currentdir,<span class="st">&quot;/summary&quot;</span>,<span class="at">sep=</span><span class="st">&quot;&quot;</span>)  </span>
+<span id="cb4-73"><a href="#cb4-73" aria-hidden="true" tabindex="-1"></a><span class="fu">setwd</span>(sumdir)  </span>
+<span id="cb4-74"><a href="#cb4-74" aria-hidden="true" tabindex="-1"></a>inFN<span class="ot">&lt;-</span><span class="fu">paste</span>(studyname,<span class="st">&quot;_samples_remove_temp.csv&quot;</span>,<span class="at">sep=</span><span class="st">&quot;&quot;</span>)</span>
+<span id="cb4-75"><a href="#cb4-75" aria-hidden="true" tabindex="-1"></a>useIDs.FN<span class="ot">&lt;-</span><span class="fu">paste</span>(sumdir,<span class="st">&quot;/&quot;</span>,studyname,<span class="st">&quot;_samples_remove.csv&quot;</span>,<span class="at">sep=</span><span class="st">&quot;&quot;</span>) </span>
+<span id="cb4-76"><a href="#cb4-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-77"><a href="#cb4-77" aria-hidden="true" tabindex="-1"></a><span class="do">#########################################################################  </span></span>
+<span id="cb4-78"><a href="#cb4-78" aria-hidden="true" tabindex="-1"></a><span class="co"># (user-define 3 as rmDup=TRUE)  create useIDs.FN file</span></span>
+<span id="cb4-79"><a href="#cb4-79" aria-hidden="true" tabindex="-1"></a><span class="do">######################################################################### </span></span>
+<span id="cb4-80"><a href="#cb4-80" aria-hidden="true" tabindex="-1"></a><span class="co"># step 2: create the ./summary/*remove.csv file manually or by R commands</span></span>
+<span id="cb4-81"><a href="#cb4-81" aria-hidden="true" tabindex="-1"></a>d<span class="ot">&lt;-</span><span class="fu">read.csv</span>(inFN,<span class="at">head=</span><span class="dv">1</span>,<span class="at">stringsAsFactors=</span>F)</span>
+<span id="cb4-82"><a href="#cb4-82" aria-hidden="true" tabindex="-1"></a>d<span class="ot">&lt;-</span>d[<span class="fu">order</span>(d[,<span class="st">&quot;Date&quot;</span>]),]</span>
+<span id="cb4-83"><a href="#cb4-83" aria-hidden="true" tabindex="-1"></a>d<span class="ot">&lt;-</span>d[<span class="fu">order</span>(d[,<span class="st">&quot;newID&quot;</span>]),]</span>
+<span id="cb4-84"><a href="#cb4-84" aria-hidden="true" tabindex="-1"></a>d[<span class="fu">which</span>(<span class="fu">is.na</span>(d[,<span class="st">&quot;newID&quot;</span>])),]</span>
+<span id="cb4-85"><a href="#cb4-85" aria-hidden="true" tabindex="-1"></a>S<span class="ot">&lt;-</span><span class="fu">duplicated</span>(d[,<span class="st">&quot;newID&quot;</span>],<span class="at">fromLast=</span>keep.last) <span class="co">#keep the last copy for nccr</span></span>
+<span id="cb4-86"><a href="#cb4-86" aria-hidden="true" tabindex="-1"></a>d[S,<span class="st">&quot;duplicate&quot;</span>]<span class="ot">&lt;-</span><span class="st">&quot;remove&quot;</span></span>
+<span id="cb4-87"><a href="#cb4-87" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(d,<span class="at">file=</span>useIDs.FN,<span class="at">row.names=</span>F)</span>
+<span id="cb4-88"><a href="#cb4-88" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-89"><a href="#cb4-89" aria-hidden="true" tabindex="-1"></a>} </span>
+<span id="cb4-90"><a href="#cb4-90" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-91"><a href="#cb4-91" aria-hidden="true" tabindex="-1"></a><span class="do">#########################################################################  </span></span>
+<span id="cb4-92"><a href="#cb4-92" aria-hidden="true" tabindex="-1"></a><span class="co">#   call afterggir</span></span>
+<span id="cb4-93"><a href="#cb4-93" aria-hidden="true" tabindex="-1"></a><span class="do">######################################################################### </span></span>
+<span id="cb4-94"><a href="#cb4-94" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-95"><a href="#cb4-95" aria-hidden="true" tabindex="-1"></a><span class="fu">setwd</span>(currentdir)  </span>
+<span id="cb4-96"><a href="#cb4-96" aria-hidden="true" tabindex="-1"></a><span class="fu">mMARCH.AC.maincall</span>(<span class="at">mode=</span>mode,</span>
+<span id="cb4-97"><a href="#cb4-97" aria-hidden="true" tabindex="-1"></a>          <span class="at">useIDs.FN=</span>useIDs.FN,</span>
+<span id="cb4-98"><a href="#cb4-98" aria-hidden="true" tabindex="-1"></a>          <span class="at">currentdir=</span>currentdir,</span>
+<span id="cb4-99"><a href="#cb4-99" aria-hidden="true" tabindex="-1"></a>          <span class="at">studyname=</span>studyname,</span>
+<span id="cb4-100"><a href="#cb4-100" aria-hidden="true" tabindex="-1"></a>          <span class="at">bindir=</span>bindir,</span>
+<span id="cb4-101"><a href="#cb4-101" aria-hidden="true" tabindex="-1"></a>          <span class="at">outputdir=</span>outputdir,</span>
+<span id="cb4-102"><a href="#cb4-102" aria-hidden="true" tabindex="-1"></a>          <span class="at">epochIn=</span>epochIn,</span>
+<span id="cb4-103"><a href="#cb4-103" aria-hidden="true" tabindex="-1"></a>          <span class="at">epochOut=</span>epochOut, </span>
+<span id="cb4-104"><a href="#cb4-104" aria-hidden="true" tabindex="-1"></a>          <span class="at">log.multiplier=</span>log.multiplier,</span>
+<span id="cb4-105"><a href="#cb4-105" aria-hidden="true" tabindex="-1"></a>          <span class="at">use.cluster=</span>use.cluster,</span>
+<span id="cb4-106"><a href="#cb4-106" aria-hidden="true" tabindex="-1"></a>          <span class="at">QCdays.alpha=</span>QCdays.alpha,</span>
+<span id="cb4-107"><a href="#cb4-107" aria-hidden="true" tabindex="-1"></a>          <span class="at">QChours.alpha=</span>QChours.alpha,</span>
+<span id="cb4-108"><a href="#cb4-108" aria-hidden="true" tabindex="-1"></a>          <span class="at">QCnights.feature.alpha=</span>QCnights.feature.alpha, </span>
+<span id="cb4-109"><a href="#cb4-109" aria-hidden="true" tabindex="-1"></a>          <span class="at">DoubleHour=</span> DoubleHour,</span>
+<span id="cb4-110"><a href="#cb4-110" aria-hidden="true" tabindex="-1"></a>          <span class="at">QC.sleepdur.avg=</span>QC.sleepdur.avg,</span>
+<span id="cb4-111"><a href="#cb4-111" aria-hidden="true" tabindex="-1"></a>          <span class="at">QC.nblocks.sleep.avg=</span>QC.nblocks.sleep.avg,</span>
+<span id="cb4-112"><a href="#cb4-112" aria-hidden="true" tabindex="-1"></a>          <span class="at">Rversion=</span>Rversion,</span>
+<span id="cb4-113"><a href="#cb4-113" aria-hidden="true" tabindex="-1"></a>          <span class="at">filename2id=</span>filename2id,</span>
+<span id="cb4-114"><a href="#cb4-114" aria-hidden="true" tabindex="-1"></a>          <span class="at">PA.threshold=</span>PA.threshold,</span>
+<span id="cb4-115"><a href="#cb4-115" aria-hidden="true" tabindex="-1"></a>          <span class="at">desiredtz=</span>desiredtz,</span>
+<span id="cb4-116"><a href="#cb4-116" aria-hidden="true" tabindex="-1"></a>          <span class="at">RemoveDaySleeper=</span>RemoveDaySleeper,</span>
+<span id="cb4-117"><a href="#cb4-117" aria-hidden="true" tabindex="-1"></a>          <span class="at">part5FN=</span>part5FN,</span>
+<span id="cb4-118"><a href="#cb4-118" aria-hidden="true" tabindex="-1"></a>          <span class="at">NfileEachBundle=</span>NfileEachBundle,</span>
+<span id="cb4-119"><a href="#cb4-119" aria-hidden="true" tabindex="-1"></a>          <span class="at">holidayFN=</span>holidayFN,</span>
+<span id="cb4-120"><a href="#cb4-120" aria-hidden="true" tabindex="-1"></a>          <span class="at">trace=</span>trace) </span>
+<span id="cb4-121"><a href="#cb4-121" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-122"><a href="#cb4-122" aria-hidden="true" tabindex="-1"></a>} </span>
+<span id="cb4-123"><a href="#cb4-123" aria-hidden="true" tabindex="-1"></a><span class="do">#########################################################################</span></span>
+<span id="cb4-124"><a href="#cb4-124" aria-hidden="true" tabindex="-1"></a>         <span class="fu">mMARCH.AC.shell</span>(mode)   </span>
+<span id="cb4-125"><a href="#cb4-125" aria-hidden="true" tabindex="-1"></a><span class="do">######################################################################### </span></span>
+<span id="cb4-126"><a href="#cb4-126" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-127"><a href="#cb4-127" aria-hidden="true" tabindex="-1"></a><span class="co">#   Note:   mMARCH.AC.shell(mode)</span></span>
+<span id="cb4-128"><a href="#cb4-128" aria-hidden="true" tabindex="-1"></a><span class="co">#        mode = 0 : creat sw/Rmd file</span></span>
+<span id="cb4-129"><a href="#cb4-129" aria-hidden="true" tabindex="-1"></a><span class="co">#        mode = 1 : data transform using cluster or not</span></span>
+<span id="cb4-130"><a href="#cb4-130" aria-hidden="true" tabindex="-1"></a><span class="co">#        mode = 2 : summary</span></span>
+<span id="cb4-131"><a href="#cb4-131" aria-hidden="true" tabindex="-1"></a><span class="co">#        mode = 3 : clean </span></span>
+<span id="cb4-132"><a href="#cb4-132" aria-hidden="true" tabindex="-1"></a><span class="co">#        mode = 4 : impu</span></span>
+<span id="cb4-133"><a href="#cb4-133" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div>
+</div>
+<div id="edit-shell-script" class="section level2">
+<h2>Edit shell script</h2>
+<p>Three places were marked as “user-define” and need to be edited by
+user in the <em>STUDYNAME_module0.maincall.R</em> file. Please rename
+the file by replacing your real studyname after the edition.</p>
+<div id="define-the-function-filename2id" class="section level3">
+<h3>1. Define the function filename2id( )</h3>
+<p>This user-defined function will change the filename of the raw
+accelerometer file to the short ID. For example, the first example
+change “0002__026907_2016-03-11 13-05-59.bin” to new ID of “0002”. If
+you prefer to define new ID by other way, you could create a .CSV file
+including “filename” and “newID” at least and then defined this function
+as the second example. The new variable of “newID”, included in the
+output files, could be used as the key ID in the summary report of
+mMARCH.AC and be used to define the duplicate samples as well.</p>
+</div>
+<div id="parameters-of-mmarch.ac.maincall" class="section level3">
+<h3>2. Parameters of mMARCH.AC.maincall()</h3>
+<p>User needs to define the following parameters as follows,</p>
+<table>
+<colgroup>
+<col width="24%" />
+<col width="75%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Variables</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>rmDup</td>
+<td>Set rmDup = TRUE if user want to remove some samples such as
+duplicates. Set rmDup = FALSE if user want to keep all samples.</td>
+</tr>
+<tr class="even">
+<td>mode</td>
+<td>Specify which of the five modules need to be run, e.g. mode = 0
+makes that all R/Rmd/sh files are generated for other modules. When mode
+= 1, all csv files in the GGIR output directory were read, transformed
+and then merged. When mode = 2, the GGIR output files were checked and
+summarized in one excel sheet. When mode = 3, the merged data was
+cleaned according to the number of valid hours on each night and the
+number of valid days for each subject. When mode = 4, the cleaned data
+was imputed.</td>
+</tr>
+<tr class="odd">
+<td>useIDs.FN</td>
+<td>Filename with or without directory for sample information in CSV
+format, which including “filename” and “duplicate” in the headlines at
+least. If duplicate=“remove”, the accelerometer files will not be used
+in the data analysis of module 5-7. Defaut is NULL, which makes all
+accelerometer files will be used in module 5-7.</td>
+</tr>
+<tr class="even">
+<td>currentdir</td>
+<td>Directory where the output needs to be stored. Note that this
+directory must exist.</td>
+</tr>
+<tr class="odd">
+<td>studyname</td>
+<td>Specify the study name that used in the output file names</td>
+</tr>
+<tr class="even">
+<td>bindir</td>
+<td>Directory where the accelerometer files are stored or list</td>
+</tr>
+<tr class="odd">
+<td>outputdir</td>
+<td>Directory where the GGIR output was stored.</td>
+</tr>
+<tr class="even">
+<td>epochIn</td>
+<td>Epoch size to which acceleration was averaged (seconds) in GGIR
+output. Defaut is 5 seconds.</td>
+</tr>
+<tr class="odd">
+<td>epochOut</td>
+<td>Epoch size to which acceleration was averaged (seconds) in module1.
+Defaut is 5 seconds.</td>
+</tr>
+<tr class="even">
+<td>flag.epochOut</td>
+<td>Epoch size to which acceleration was averaged (seconds) in module 3.
+Defaut is 60 seconds.</td>
+</tr>
+<tr class="odd">
+<td>log.multiplier</td>
+<td>The coefficient used in the log transformation of the ENMO data,
+i.e. log( log.multiplier * ENMO + 1), which have been used in module
+5-7. Defaut is 9250.</td>
+</tr>
+<tr class="even">
+<td>use.cluster</td>
+<td>Specify if module1 will be done by parallel computing. Default is
+TRUE, and the CSV file in GGIR output will be merged for every 20 files
+first, and then combined for all.</td>
+</tr>
+<tr class="odd">
+<td>QCdays.alpha</td>
+<td>Minimum required number of valid days in subject specific analysis
+as a quality control step in module2. Default is 7 days.</td>
+</tr>
+<tr class="even">
+<td>QChours.alpha</td>
+<td>Minimum required number of valid hours in day specific analysis as a
+quality control step in module2. Default is 16 hours.</td>
+</tr>
+<tr class="odd">
+<td>QCnights.feature.alpha</td>
+<td>Minimum required number of valid nights in day specific mean and SD
+analysis as a quality control step in the JIVE analysis. Default is
+c(0,0), i.e. no additional data cleaning in this step.</td>
+</tr>
+<tr class="even">
+<td>DoubleHour</td>
+<td>Specify the method of processing the double hours for days that
+daylight saving time starts and ends for example. In detail, DoubleHour
+= c(“average”,“earlier”,“later”). The acceleration data was averaged on
+double hours when DoulbeHour=“average”. Only the acceleration data in
+the earlier occurrence was remained for double hours while the other
+duplicate data were ignored when DoulbeHour=“earlier”. Only the
+acceleration data in the later occurrence was remained for double hours
+while the other duplicate data were ignored when DoulbeHour=“later”.
+Default is “average”.</td>
+</tr>
+<tr class="odd">
+<td>QC.sleepdur.avg</td>
+<td>As taking the deault value of QC.sleepdur.avg=c(3,12), individuals
+were excluded with an average sleep duration &lt;3 hour or &gt;12
+hour.</td>
+</tr>
+<tr class="even">
+<td>QC.nblocks.sleep.avg</td>
+<td>As taking the deault value of QC.nblocks.sleep.avg=c(5,30),
+individuals were excluded with an average number of nocturnal sleep
+episodes &lt;5 or &gt;30.</td>
+</tr>
+<tr class="odd">
+<td>Rversion</td>
+<td>R version, eg. “R/3.6.3”. Default is “R”.</td>
+</tr>
+<tr class="even">
+<td>filename2id</td>
+<td>User defined function for converting filename to sample IDs. Default
+is NULL.</td>
+</tr>
+<tr class="odd">
+<td>PA.threshold</td>
+<td>Threshold for light, moderate and vigorous physical activity.
+Default is c(50,100,400).</td>
+</tr>
+<tr class="even">
+<td>desiredtz</td>
+<td>desired timezone: see also <a href="https://en.wikipedia.org/wiki/Zone.tab" class="uri">https://en.wikipedia.org/wiki/Zone.tab</a>. Used in
+g.inspectfile(). Default is “US/Eastern”.</td>
+</tr>
+<tr class="odd">
+<td>RemoveDaySleeper</td>
+<td>Specify if the daysleeper nights are removed from the calculation of
+number of valid days for each subject. Default is FALSE.</td>
+</tr>
+<tr class="even">
+<td>part5FN</td>
+<td>Specify which output is used in the GGIR part5 results. Defaut is
+“WW_L50M125V500_T5A5”, which means that
+part5_daysummary_WW_L50M125V500_T5A5.csv and
+part5_personsummary_WW_L50M125V500_T5A5.csv are used in the
+analysis.</td>
+</tr>
+<tr class="odd">
+<td>NfileEachBundle</td>
+<td>Number of files in each bundle when the csv data were read and
+processed in a cluster. Default is 20.</td>
+</tr>
+<tr class="even">
+<td>trace</td>
+<td>Specify if the intermediate results is printed when the function was
+executed. Default is FALSE.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="subset-of-samples-optional" class="section level3">
+<h3>3. Subset of samples (optional)</h3>
+<p>The mMARCH.AC package not only simply transform/merge the activity
+and sleep data, but it also can do some prelimary data analysis such as
+principle componet analysis and feature extraction. Therefore, the basic
+data clean will be processed first as follows,</p>
+<ul>
+<li>data clean by removing valid days/samples defined by minimum
+required number of valid hours/days in the activity data<br />
+</li>
+<li>remove duplicate samples</li>
+</ul>
+<p>If you prefer to use all samples, just skip this module and use
+<code>rmDup=FALSE</code> as the default. Otherwise, if you want to
+remove some samples such as duplicates, there are two ways as
+follows,</p>
+<ul>
+<li>Edit R codes of “step 2” in this module. For example, the template
+will keep the later copy for duplicate samples<br />
+</li>
+<li>Remove R codes of “step 2” in this module, and create
+<em>studyname_samples_remove.csv</em> file by filling “remove” in the
+“duplicate” column in the template file of
+<em>studyname_samples_remove_temp.csv</em>. The data will be kept unless
+duplicate=“remove”.</li>
+</ul>
+</div>
+</div>
+<div id="run-r-script" class="section level2">
+<h2>Run R script</h2>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mMARCH.AC.shell</span>(mode,filename2id)   </span></code></pre></div>
+<table>
+<colgroup>
+<col width="24%" />
+<col width="75%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Variables</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>mode</td>
+<td>Specify which of the five modules need to be run, e.g. mode = 0
+makes that all R/Rmd/sh files are generated for other modules. When mode
+= 1, all csv files in the GGIR output directory were read, transformed
+and then merged. When mode = 2, the GGIR output files were checked and
+summarized in one excel sheet. When mode = 3, the merged data was
+cleaned according to the number of valid hours on each night and the
+number of valid days for each subject. When mode = 4, the cleaned data
+was imputed.</td>
+</tr>
+<tr class="even">
+<td>filename2id</td>
+<td>This user-defined function will change the filename of the raw
+accelerometer file to the short ID for the purpose of identifying
+duplicate IDs.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="run-script-in-a-cluster" class="section level2">
+<h2>Run script in a cluster</h2>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">#$ -cwd</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">#$ -j y</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co">#$ -S /bin/bash</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  source <span class="sc">~</span><span class="er">/</span>.bash_profile</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  module load R ; </span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>     R <span class="sc">--</span>no<span class="sc">-</span>save <span class="sc">--</span>no<span class="sc">-</span>restore <span class="sc">--</span>args  <span class="sc">&lt;</span> studyname_module0.maincall.R  <span class="dv">0</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>     R <span class="sc">--</span>no<span class="sc">-</span>save <span class="sc">--</span>no<span class="sc">-</span>restore <span class="sc">--</span>args  <span class="sc">&lt;</span> studyname_module0.maincall.R  <span class="dv">1</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>     R <span class="sc">--</span>no<span class="sc">-</span>save <span class="sc">--</span>no<span class="sc">-</span>restore <span class="sc">--</span>args  <span class="sc">&lt;</span> studyname_module0.maincall.R  <span class="dv">2</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>     R <span class="sc">--</span>no<span class="sc">-</span>save <span class="sc">--</span>no<span class="sc">-</span>restore <span class="sc">--</span>args  <span class="sc">&lt;</span> studyname_module0.maincall.R  <span class="dv">3</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>     R <span class="sc">--</span>no<span class="sc">-</span>save <span class="sc">--</span>no<span class="sc">-</span>restore <span class="sc">--</span>args  <span class="sc">&lt;</span> studyname_module0.maincall.R  <span class="dv">4</span> </span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>     R <span class="sc">-</span>e <span class="st">&quot;rmarkdown::render(&#39;module5_studyname_Data_process_report.Rmd&#39;   )&quot;</span>  </span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>     R <span class="sc">-</span>e <span class="st">&quot;rmarkdown::render(&#39;module6_studyname_NonWear.report.Rmd&#39;   )&quot;</span> </span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>     R <span class="sc">-</span>e <span class="st">&quot;rmarkdown::render(&#39;module7a_studyname_calculate_newfeatures.Rmd&#39;   )&quot;</span> </span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>     R <span class="sc">-</span>e <span class="st">&quot;rmarkdown::render(&#39;module7b_studyname_merge_GGIRfeatures.Rmd&#39;   )&quot;</span> </span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>     R <span class="sc">-</span>e <span class="st">&quot;rmarkdown::render(&#39;module7c_studyname_runJIVE.Rmd&#39;   )&quot;</span> </span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>     R <span class="sc">-</span>e <span class="st">&quot;rmarkdown::render(&#39;module7d_studyname_calculate_WD_WE_avg_features.Rmd&#39;   )&quot;</span> </span></code></pre></div>
+</div>
+</div>
+<div id="section-3" class="section level1">
+<h1></h1>
+</div>
+<div id="section-4" class="section level1">
+<h1></h1>
+</div>
+<div id="software-functionalities" class="section level1">
+<h1>Software Functionalities</h1>
+<div id="module-1" class="section level2">
+<h2>Module 1</h2>
+<p>The functions of Module 1 read, merge, and transform the lower
+resolution summary of raw acceleration data for all subjects. Raw data
+are summarized using Euclidian Norm Minus One (ENMO) (Migueles et al.,
+2019), a rotationally invariant measure of volume of acceleration, in
+epochs specified by the user in their call to GGIR. Merged data,
+originally in long format, are saved in wide format, an intuitive data
+structure for accelerometer data (Leroux 2019). Depending on the time
+zone on which the devices were initialized, a day may have between 23
+and 25 hours due to daylights savings time. On daylight savings
+crossovers, ENMO is averaged for duplicate timestamps between 1:00 AM
+and 2:00 AM, allowing for straightforward comparisons to standard
+24-hour days. In addition to recording ENMO at each epoch, the angle of
+the z-axis (ANGLEZ) relative to the horizontal plane (degrees), used for
+estimating sleep periods, is merged and saved into an excel file.
+Additional data recorded by certain devices are merged for all
+participants and saved under the ./data directory including the light
+mean, light peak, temperature mean, clipping score, and the Euclidian
+norm metric (EN) if available.</p>
+The activity data in the GGIR output is formatted in long
+csv-spreadsheets as follows,<br />
+
+<table>
+<tbody>
+<tr>
+<td style="text-align:left;">
+timestamp
+</td>
+<td style="text-align:left;">
+ENMO
+</td>
+<td style="text-align:left;">
+anglez
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2017-11-30T00:00:00+0100
+</td>
+<td style="text-align:left;">
+8e-04
+</td>
+<td style="text-align:left;">
+-32.5758
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2017-11-30T00:00:05+0100
+</td>
+<td style="text-align:left;">
+0.0198
+</td>
+<td style="text-align:left;">
+-25.5726
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2017-11-30T00:00:10+0100
+</td>
+<td style="text-align:left;">
+0.0177
+</td>
+<td style="text-align:left;">
+3.7972
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2017-11-30T00:00:15+0100
+</td>
+<td style="text-align:left;">
+0.0118
+</td>
+<td style="text-align:left;">
+6.7154
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2017-11-30T00:00:20+0100
+</td>
+<td style="text-align:left;">
+0.0106
+</td>
+<td style="text-align:left;">
+10.0357
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2017-11-30T00:00:25+0100
+</td>
+<td style="text-align:left;">
+0.0341
+</td>
+<td style="text-align:left;">
+21.0143
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2017-11-30T00:00:30+0100
+</td>
+<td style="text-align:left;">
+0.1708
+</td>
+<td style="text-align:left;">
+19.5008
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+……
+</td>
+<td style="text-align:left;">
+……
+</td>
+<td style="text-align:left;">
+……
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2017-11-30T23:59:55+0100
+</td>
+<td style="text-align:left;">
+0.1504
+</td>
+<td style="text-align:left;">
+-0.596
+</td>
+</tr>
+</tbody>
+</table>
+<p>Each row represents the corresponding ENMO and ANGLEZ values at a
+timestamp per 5 seconds epoch, which is specified by GGIR parameter
+(windowsizes) when running GGIR. After running Module 1, the ENMO and
+ANGLEZ data are transformed into wide matrix in which each row
+represents 24 hours data for a day. For example, the ENMO data is
+formated as follows,</p>
+<table style="width:100%;">
+<colgroup>
+<col width="13%" />
+<col width="10%" />
+<col width="9%" />
+<col width="9%" />
+<col width="9%" />
+<col width="9%" />
+<col width="9%" />
+<col width="9%" />
+<col width="8%" />
+<col width="10%" />
+</colgroup>
+<tbody>
+<tr class="odd">
+<td align="left">Date</td>
+<td align="left">0:00:00</td>
+<td align="left">0:00:05</td>
+<td align="left">0:00:10</td>
+<td align="left">0:00:15</td>
+<td align="left">0:00:20</td>
+<td align="left">0:00:25</td>
+<td align="left">0:00:30</td>
+<td align="left">……</td>
+<td align="left">23:59:55</td>
+</tr>
+<tr class="even">
+<td align="left">11/30/2017</td>
+<td align="left">8.00E-04</td>
+<td align="left">0.0198</td>
+<td align="left">0.0177</td>
+<td align="left">0.0118</td>
+<td align="left">0.0106</td>
+<td align="left">0.0341</td>
+<td align="left">0.1708</td>
+<td align="left">……</td>
+<td align="left">0.1504</td>
+</tr>
+</tbody>
+</table>
+<p>Finally, the data was merged for all days and all subjects.</p>
+</div>
+<div id="module-2" class="section level2">
+<h2>Module 2</h2>
+<p>The functions of Module 2 create descriptive variables of all
+accelerometer files output by GGIR. In Module 2, an excel file is output
+under the ./summary directory, which includes ten pages as follows, (1)
+List of files in the GGIR output (2) Summary of numbers of output files
+(3) List of duplicate IDs (4) ID errors (5) Number of valid days (6)
+Table of number of valid/missing days (7) Missing pattern (8) Frequency
+of the missing pattern (9) Description of all accelerometer files (10)
+device information. Multiple plots are generated in a pdf file including
+the number of valid hours, days, missing pattern, etc. First, the
+completeness of GGIR run is inspected by detecting the missing files in
+each GGIR step when user specified the path of GGIR output.
+Additionally, the descriptive variables are created to form a
+comprehensive data quality report based on summary results generated by
+GGIR for the purpose of examining data quality in the Module 2 of
+mMARCH.AC.</p>
+</div>
+<div id="module-3-and-module-4" class="section level2">
+<h2>Module 3 and Module 4</h2>
+<p>The functions of Module 3 introduce ‘flag’ variables for data
+cleaning of the merged ENMO and ANGLEZ data. By default, days with more
+than 16 hours are marked as valid days and subjects with more than 7
+valid days are marked as valid samples. Users can set these two
+parameters in the call to the main function (QCdays.alpha = 7,
+QChours.alpha = 16). Further, the data can be aggregated (averaged) in
+lower resolution epochs (e.g. minute-level or hour-level) as desired by
+users. In Module 4, ENMO data during estimated non-wear periods are
+imputed by taking the subject-level mean over all the valid days for
+each subject at that time, limiting potential bias in imputation due to
+diurnal patterns of activity. All output is saved under the ./data
+directory. In the output file, the following description variables are
+included: (1) number of valid hours; (2) missing pattern for each
+subject; (3) non-wear time in minutes; (4) an indicator variable to
+indicate if the visit should be removed for having multiple visits for
+some subjects which might lead to invalidity of independent and
+identically distribution in statistics and (5) the number of missing
+values after imputation. When the number of missing values after
+imputation is not zero, it means the activity data is missing on same
+timestamps among all days and therefore could not be imputed, therefore,
+such samples would be removed when systematic missingness was
+observed.</p>
+</div>
+<div id="module-5" class="section level2">
+<h2>Module 5</h2>
+<p>The functions of Module 5 generate a comprehensive report in .html
+format. This report includes data quality checks and an exploratory data
+analysis using valid days of data. First, the numbers and missingness of
+GGIR output files are summarized for all GGIR parts. Second, duplicate
+samples are checked and marked, where the duplication might be caused by
+having multiple visits for some samples but only one visit will be kept
+in the data analysis such as functional principal component analysis
+(FPCA). Third, as shown in Figure 1, data quality is presented visually
+using the number of valid days, non-wear time, and missing data pattern.
+As an exploratory analysis, the data correlation, and the output of FPCA
+analysis are plotted in the report.</p>
+</div>
+<div id="module-6-optional" class="section level2">
+<h2>Module 6 (Optional)</h2>
+<p>Estimated non-wear periods are loaded from the <span class="math inline">\(M\$metalong\$nonwearscore\)</span> variable of the
+R data that was stored in the folder of /meta/basic of the GGIR output,
+which generate the matrix to clarify when data was imputed for each long
+epoch time window and the reason for imputation. This function will
+generate a non-wear matrix at minute level, coded as 0/1 for
+wear/non-wear time. This function will generate a non-wear matrix at
+minute level, and it could be skipped if user chose to use the
+imputation data in the JIVE application as default.</p>
+</div>
+<div id="module-7" class="section level2">
+<h2>Module 7</h2>
+<p>In Module 7, 88 features were extracted from minute level activity
+data of three domains of sleep, physical activity, and circadian
+rhythmicity, which were based on outputs from GGIR v2.4.0 and calculated
+by R ActFrag and ActCR packages. The standard deviation across days on
+each subject was also created for each feature. The weekday and weekend
+specific features were extracted as well since most features in the
+sleep and physical activity showed significant difference between
+weekdays (Monday to Friday) and weekends (Saturday and Sunday).
+Specially, the sleep features on weekends are calculated based on sleep
+periods from Friday night to Saurday morning, Saturday night to Sunday
+morning, and last night to a holiday morning. Furthermore, holdiays
+could be counted as weekends if user provide the holiday information
+through the argument of <em>holidayFN</em> in the <em>afterggir()</em>
+function. In brief, sleep domain referred to sleep duration, midpoint,
+efficiency, etc. Physical activity referred to daily motor activity such
+as sedentary behavior, light, and moderate-to-vigorous physical activity
+(MVPA). Circadian rhythms were natural rhythms that regulates the
+sleep-wake cycle within every 24 hours. For example, the cosinor curve
+and FPCA analysis were used in modeling of biological rhythms. A
+comprehensive list of all features could be found in the supplementary
+table and more detailed definition could be found in the mMARCH.AC
+paper, GGIR manual and Di et al.’s publication in 2019.</p>
+<p>All features listed are calculated using minute-level activity data
+by default. Several duplicate features were also extracted from GGIR
+results as an additional data source. As an integral module of mMARCH.AC
+package, we proposed to use a multi-modal integrative technique, Joint
+and Individual Variance Explained (JIVE), to efficiently and
+simultaneously deal with multiple features representing physical
+activity (PA), sleep (SL), and circadian rhythmicity (CR) (Di et al.,
+2019; Lock et al., 2013; O’Connell and Lock, 2016). The integrative
+analysis of multiple derived variables in each of these three domains
+assessed by accelerometry is applied to explain the joint and individual
+variation in these three domains. Conceptually, JIVE assumes four groups
+of latent variables that generate: i) individual variation captured by
+PA, SL, CR; and ii) joint variation by PA, SL, CR. These latent
+variables (JIVE scores) can be estimated and then used as novel measures
+capturing both individual and joint variability of measures of sleep,
+physical activity and circadian rhythmicity. JIVE has been applied to
+multivariate actigraphy derived features to address the interdependence
+between domains of physical activity, sleep, and circadian rhythm (Di et
+al. 2019). JIVE decomposition utilized the subject level means of all 88
+features including those duplicated features from GGIR outputs. Heatmaps
+of the estimated joint structure of the full JIVE decomposition are
+created, with examples shown in Figure 1. JIVE scores are estimated for
+both joint and individual variation structures. Building the activity
+features could enrich the markers for understanding genetic contribution
+of human diseases.</p>
+</div>
+</div>
+<div id="section-5" class="section level1">
+<h1></h1>
+</div>
+<div id="running-mmarch.ac-and-inspecting-the-results" class="section level1">
+<h1>Running mMARCH.AC and Inspecting the results</h1>
+<div id="input-and-output-of-module-0" class="section level2">
+<h2>Input and output of Module 0</h2>
+<ul>
+<li>Command = mMARCH.AC.shell(mode=0)<br />
+</li>
+<li>Output folder = ./</li>
+</ul>
+<table>
+<colgroup>
+<col width="22%" />
+<col width="77%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Output</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>module1a_data.transform.R (use.cluster=TRUE, optional)</td>
+<td>R code for data transformation and merge for every 20 files in each
+partition. When the number of .bin files is large ( &gt; 1000), the data
+merge could take long time, user could split the job and submit the job
+to a cluster for parallel computing.</td>
+</tr>
+<tr class="even">
+<td>module1b_data.transform.sw (use.cluster=TRUE, optional)</td>
+<td>Submit the job to a cluster for parallel computing</td>
+</tr>
+<tr class="odd">
+<td>module1c_data.transform.merge.sw (use.cluster=TRUE, optional)</td>
+<td>Merge all partitions for the ENMO and ANGLEZ data</td>
+</tr>
+<tr class="even">
+<td>module5_studyname_Data_process_report.Rmd</td>
+<td>R markdown file for generate a comprehensive report of data
+processing and explortatory plots.</td>
+</tr>
+<tr class="odd">
+<td>module6_studyname_NonWear.report.Rmd</td>
+<td>R markdown file for generate a report of nonwear score.</td>
+</tr>
+<tr class="even">
+<td>module7a_studyname_calculate_newfeatures.Rmd</td>
+<td>Extract some features from the actigraphy data using R</td>
+</tr>
+<tr class="odd">
+<td>module7b_studyname_merge_GGIRfeatures.Rmd</td>
+<td>Extract other features from the GGIR output and merge all features
+together</td>
+</tr>
+<tr class="even">
+<td>module7c_studyname_runJIVE.Rmd</td>
+<td>Perform JIVE Decomposition for All Features using r.jive</td>
+</tr>
+<tr class="odd">
+<td>module7d_studyname_calculate_WD_WE_avg_features.Rmd</td>
+<td>Extract some weekday/weekend specific features from the actigraphy
+data using R</td>
+</tr>
+<tr class="even">
+<td>module9_swarm.sh</td>
+<td>shell script to submit all jobs to the cluster</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="input-and-output-of-module-1" class="section level2">
+<h2>Input and output of Module 1</h2>
+<ul>
+<li>Main input files: csv files under /meta/csv folders of GGIR
+output</li>
+<li>Command = mMARCH.AC.shell(mode=1)</li>
+<li>Output folder = ./data</li>
+</ul>
+<table>
+<colgroup>
+<col width="26%" />
+<col width="73%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Output</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>studyname_filesummary_csvlist.csv</td>
+<td>File list in the ./csv folder of GGIR</td>
+</tr>
+<tr class="even">
+<td>studyname_filesummary_Rdatalist.csv</td>
+<td>File list in the ./basic folder of GGIR</td>
+</tr>
+<tr class="odd">
+<td>All_studyname_ANGLEZ.data.csv</td>
+<td>Raw data of ANGLEZ after merge</td>
+</tr>
+<tr class="even">
+<td>All_studyname_ENMO.data.csv</td>
+<td>Raw data of ENMO after merge</td>
+</tr>
+<tr class="odd">
+<td>nonwearscore_studyname_f0_f1_Xs.csv</td>
+<td>Data matrix of nonwearscore</td>
+</tr>
+<tr class="even">
+<td>nonwearscore_studyname_f0_f1_Xs.pdf</td>
+<td>Plots for nonwearscore</td>
+</tr>
+<tr class="odd">
+<td>plot.nonwearVSnvalidhours.csv</td>
+<td>Nonwear data for plot</td>
+</tr>
+<tr class="even">
+<td>plot.nonwearVSnvalidhours.pdf</td>
+<td>Nonwear plots</td>
+</tr>
+<tr class="odd">
+<td>lightmean_studyname_f0_f1_Xs.csv</td>
+<td>Data matrix of lightmean</td>
+</tr>
+<tr class="even">
+<td>lightpeak_studyname_f0_f1_Xs.csv</td>
+<td>Data matrix of lightpeak</td>
+</tr>
+<tr class="odd">
+<td>temperaturemean_studyname_f0_f1_Xs.csv</td>
+<td>Data matrix of temperaturemean</td>
+</tr>
+<tr class="even">
+<td>clippingscore_studyname_f0_f1_Xs.csv</td>
+<td>Raw data of clippingscore</td>
+</tr>
+<tr class="odd">
+<td>EN_studyname_f0_f1_Xs.csv</td>
+<td>Data matrix of EN</td>
+</tr>
+</tbody>
+</table>
+<p><em>f0 and f1 are the file index to start and finish with<br />
+</em>Xs is the epoch size to which acceleration was averaged (seconds)
+in GGIR output</p>
+</div>
+<div id="input-and-output-of-module-2" class="section level2">
+<h2>Input and output of Module 2</h2>
+<ul>
+<li><p>Main input files<br />
++ ./data/All_studyname_ENMO.data.csv<br />
++ GGIR results: part2, part4 and part5 (please specify <span class="math inline">\(part5FN\)</span> in the main function)<br />
++ GGIR raw data when bindir was specified</p></li>
+<li><p>Command = mMARCH.AC.shell(mode=2)<br />
+</p></li>
+<li><p>Output folder = ./summary</p></li>
+</ul>
+<table>
+<colgroup>
+<col width="25%" />
+<col width="74%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Output</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>studyname_ggir_output_summary.xlsx</td>
+<td>Description of all accelerometer files in the GGIR output. This
+excel file includs 9 pages as follows, (1) List of files in the GGIR
+output (2) Summary of files (3) List of duplicate IDs (4) ID errors (5)
+Number of valid days (6) Table of number of valid/missing days (7)
+Missing patten (8) Frequency of the missing pattern (9) Description of
+all accelerometer files.</td>
+</tr>
+<tr class="even">
+<td>part2daysummary.info.csv</td>
+<td>Intermediate results for description of each accelerometer
+file.</td>
+</tr>
+<tr class="odd">
+<td>studyname_ggir_output_summary_plot.pdf</td>
+<td>Some plots such as the number of valid days, which were included in
+the module5_studyname_Data_process_report.htm file as well.</td>
+</tr>
+<tr class="even">
+<td>studyname_samples_remove_temp.csv</td>
+<td>Create studyname_samples_remove.csv file by filling “remove” in the
+“duplicate” column in this template. If duplicate=“remove”, the
+accelerometer files will not be used in the data analysis of
+module5.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="input-and-output-of-module-3" class="section level2">
+<h2>Input and output of Module 3</h2>
+<ul>
+<li>Main input file: ./data/All_studyname_ENMO.data.csv<br />
+</li>
+<li>Command = mMARCH.AC.shell(mode=3)</li>
+<li>Output folder = ./data</li>
+</ul>
+<table>
+<colgroup>
+<col width="26%" />
+<col width="73%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Output</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>flag_All_studyname_ANGLEZ.data.Xs.csv</td>
+<td>Adding flags for data cleaning of the raw ANGLEZ data</td>
+</tr>
+<tr class="even">
+<td>flag_All_studyname_ENMO.data.Xs.csv</td>
+<td>Adding flags for data cleaning of the raw ENMO data</td>
+</tr>
+<tr class="odd">
+<td>IDMatrix.flag_All_studyname_ENMO.data.60s.csv</td>
+<td>ID matrix</td>
+</tr>
+</tbody>
+</table>
+<p>*Xs is the epoch size to which acceleration was averaged (seconds) in
+GGIR output</p>
+</div>
+<div id="input-and-output-of-module-4" class="section level2">
+<h2>Input and output of Module 4</h2>
+<ul>
+<li>Main input file: ./data/flag_All_ studyname _ENMO.data.5s.csv</li>
+<li>Command = mMARCH.AC.shell(mode=4)</li>
+<li>Output folder = ./data</li>
+</ul>
+<table>
+<colgroup>
+<col width="14%" />
+<col width="85%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Output</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>impu.flag_All_studyname_ENMO.data.60s.csv</td>
+<td>Imputation data for the merged ENMO data, and the missing values
+were imputated by the average ENMO over all the valid days for each
+subject.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="description-of-flag-variables-in-the-output-data" class="section level2">
+<h2>Description of flag variables in the output data</h2>
+<table>
+<colgroup>
+<col width="14%" />
+<col width="85%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Variable</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>filename</td>
+<td>accelerometer file name</td>
+</tr>
+<tr class="even">
+<td>Date</td>
+<td>date recored from the GGIR part2.summary file</td>
+</tr>
+<tr class="odd">
+<td>id</td>
+<td>IDs recored from the GGIR part2.summary file</td>
+</tr>
+<tr class="even">
+<td>calender_date</td>
+<td>date in the format of yyyy-mm-dd</td>
+</tr>
+<tr class="odd">
+<td>N.valid.hours</td>
+<td>number of hours with valid data recored from the
+part2_daysummary.csv file in the GGIR output</td>
+</tr>
+<tr class="even">
+<td>N.hours</td>
+<td>number of hours of measurement recored from the part2_daysummary.csv
+file in the GGIR output</td>
+</tr>
+<tr class="odd">
+<td>weekday</td>
+<td>day of the week-Day of the week</td>
+</tr>
+<tr class="even">
+<td>measurementday</td>
+<td>day of measurement-Day number relative to start of the
+measurement</td>
+</tr>
+<tr class="odd">
+<td>newID</td>
+<td>new IDs defined as the user-defined function of filename2id(),
+e.g. substrings of the filename</td>
+</tr>
+<tr class="even">
+<td>missing</td>
+<td>“M” indicates missing for an invalid day, and “C” indicates
+completeness for a valid day</td>
+</tr>
+<tr class="odd">
+<td>Ndays</td>
+<td>number of days of measurement</td>
+</tr>
+<tr class="even">
+<td>ith_day</td>
+<td>rank of the measurementday, for example, the value is
+1,2,3,4,-3,-2,-1 for measurementday = 1,…,7</td>
+</tr>
+<tr class="odd">
+<td>Nmiss</td>
+<td>number of missing (invalid) days</td>
+</tr>
+<tr class="even">
+<td>Nnonmiss</td>
+<td>number of non-missing (valid) days</td>
+</tr>
+<tr class="odd">
+<td>misspattern</td>
+<td>indicators of missing/nonmissing for all measurement days at the
+subject level</td>
+</tr>
+<tr class="even">
+<td>RowNonWear</td>
+<td>number of columnns in the non-wearing matrix</td>
+</tr>
+<tr class="odd">
+<td>NonWearMin</td>
+<td>number of minutes of non-wearing</td>
+</tr>
+<tr class="even">
+<td>remove16h7day</td>
+<td>indicator of a key qulity control output. If remove16h7day=1, the
+day need to be removed. If remove16h7day=0, the day need to be
+kept.</td>
+</tr>
+<tr class="odd">
+<td>duplicate</td>
+<td>If duplicate=“remove”, the accelerometer files will not be used in
+the data analysis of module5.</td>
+</tr>
+<tr class="even">
+<td>ImpuMiss.b</td>
+<td>number of missing values on the ENMO data before imputation</td>
+</tr>
+<tr class="odd">
+<td>ImpuMiss.a</td>
+<td>number of missing values on the ENMO data after imputation</td>
+</tr>
+<tr class="even">
+<td>KEEP</td>
+<td>The value is “keep”/“remove”, e.g. KEEP=“remove” if remove16h7day=1
+or duplicate=“remove” or ImpuMiss.a&gt;0</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="input-and-output-of-module-5" class="section level2">
+<h2>Input and output of Module 5</h2>
+<ul>
+<li>Main input files
+<ul>
+<li>./summary/studyname_ggir_output_summary.xlsx</li>
+<li>./summary/part24daysummary.info.csv</li>
+<li>./data/plot.nonwearVSnvalidhours.csv</li>
+<li>./data/impu.flag_All_studyname_ENMO.data.flag.epochOuts.csv</li>
+</ul></li>
+<li>Command: run module5_studyname_Data_process_report.Rmd</li>
+<li>Output folder = ./</li>
+</ul>
+<table>
+<colgroup>
+<col width="14%" />
+<col width="85%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Output</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>module5_studyname_Data_process_report.html</td>
+<td>A comprehensive report of data processing and explortatory
+plots.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="input-and-output-of-module-6" class="section level2">
+<h2>Input and output of Module 6</h2>
+<ul>
+<li>Main input file: nonwearscore_studyname_01_xx_900s.csv</li>
+<li>Command = run module6_studyname_NonWear.report.Rmd</li>
+<li>Output folder = ./</li>
+</ul>
+<table>
+<colgroup>
+<col width="12%" />
+<col width="12%" />
+<col width="74%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Folder</th>
+<th>Output</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>./</td>
+<td>module6_studyname_NonWear.report.html</td>
+<td>A report of nonwear score.</td>
+</tr>
+<tr class="even">
+<td>./data</td>
+<td>JIVEraw_nonwearscore_studyname_1_5_Xs.csv</td>
+<td>Imputation data matrix of nonwearscore (1/0)</td>
+</tr>
+<tr class="odd">
+<td>./data</td>
+<td>JIVEimpu_nonwearscore_studyname_1_5_Xs.csv</td>
+<td>Data matrix of nonwearscore (1/0/NA)</td>
+</tr>
+</tbody>
+</table>
+<p><em>f0 and f1 are the file index to start and finish with<br />
+</em>Xs is the epoch size to which acceleration was averaged (seconds)
+in GGIR output</p>
+</div>
+<div id="input-and-output-of-module-7a" class="section level2">
+<h2>Input and output of Module 7a</h2>
+<ul>
+<li>Main input
+<ul>
+<li>./data/impu.flag_All_studyname_ENMO.data.flag.epochOuts.csv</li>
+<li>GGIR: /results/QC/part4_nightsummary_sleep_full.csv</li>
+</ul></li>
+<li>Command = run module7a_studyname_calculate_newfeatures.Rmd</li>
+<li>Output folder = ./</li>
+</ul>
+<table>
+<colgroup>
+<col width="14%" />
+<col width="85%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Output</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>module7_studyname_all_features_dictionary.xlsx</td>
+<td>Description of features</td>
+</tr>
+<tr class="even">
+<td>module7a_studyname_calculate_newfeatures.html</td>
+<td>Extract some features from the actigraphy data using R</td>
+</tr>
+<tr class="odd">
+<td>module7a_studyname_new_features_page1_features.csv</td>
+<td>List of some features</td>
+</tr>
+<tr class="even">
+<td>module7a_studyname_new_features_page2_face_day_PCs.csv</td>
+<td>Function PCA at the day level using fpca.face( )</td>
+</tr>
+<tr class="odd">
+<td>module7a_studyname_new_features_page3_face_subject_PCs.csv</td>
+<td>Function PCA at the subject level using fpca.face( )</td>
+</tr>
+<tr class="even">
+<td>module7a_studyname_new_features_page4_denseFLMM_day_PCs.csv</td>
+<td>Function PCA at the day level using denseFLMM( )</td>
+</tr>
+<tr class="odd">
+<td>module7a_studyname_new_features_page5_denseFLMM_subject_PCs.csv</td>
+<td>Function PCA at the subject level using denseFLMM( )</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="input-and-output-of-module-7b" class="section level2">
+<h2>Input and output of Module 7b</h2>
+<ul>
+<li>Main inputs
+<ul>
+<li>GGIR: part2_summary.csv</li>
+<li>GGIR: part2_daysummary.csv</li>
+<li>GGIR: part4_nightsummary_sleep_cleaned.csv</li>
+<li>GGIR: /results/QC/part4_nightsummary_sleep_full.csv</li>
+<li>GGIR: part5_daysummary_part5FN.csv<br />
+</li>
+<li>module7_studyname_all_features_dictionary.xlsx</li>
+</ul></li>
+<li>Command = run module7b_studyname_merge_GGIRfeatures.Rmd</li>
+<li>Output folder = ./</li>
+</ul>
+<table>
+<colgroup>
+<col width="14%" />
+<col width="85%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Output</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>module7b_studyname_merge_GGIRfeatures.html</td>
+<td>Extract other features from the GGIR output and merge all features
+together</td>
+</tr>
+<tr class="even">
+<td>module7b_studyname_all_features_1_day.csv</td>
+<td>Raw data of all features</td>
+</tr>
+<tr class="odd">
+<td>module7b_studyname_all_features_2_dayclean.csv</td>
+<td>Keep sample with valid ENMO inputs</td>
+</tr>
+<tr class="even">
+<td>module7b_studyname_all_features_2_dayclean.csv.log</td>
+<td>Log file of each variable of
+module5b_studyname_all_features_2_dayclean.csv</td>
+</tr>
+<tr class="odd">
+<td>plot_module7b_studyname_all_features_2_dayclean.csv.pdf</td>
+<td>Plot of each variable of
+module5b_studyname_all_features_2_dayclean.csv</td>
+</tr>
+<tr class="even">
+<td>module7b_studyname_all_features_3_subject.csv</td>
+<td>Average variable at the subject level</td>
+</tr>
+<tr class="odd">
+<td>module7b_studyname_all_features_3_subject.csv.log</td>
+<td>Log file of each variable of
+module5b_studyname_all_features_3_subject.csv</td>
+</tr>
+<tr class="even">
+<td>plot_module7b_studyname_all_features_3_subject.csv.pdf</td>
+<td>Plot of each variable of
+module5b_studyname_all_features_3_subject.csv</td>
+</tr>
+<tr class="odd">
+<td>module7b_studyname_all_features_4_subjectSD.csv</td>
+<td>subject level SD of each feature</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="input-and-output-of-module-7c" class="section level2">
+<h2>Input and output of Module 7c</h2>
+<ul>
+<li>Main inputs
+<ul>
+<li>module7b_studyname_all_features_3_subject.csv</li>
+<li>module7b_studyname_all_features_4_subjectSD.csv</li>
+</ul></li>
+<li>Command = run module7b_studyname_merge_GGIRfeatures.Rmd</li>
+<li>Output folder = ./</li>
+</ul>
+<table>
+<colgroup>
+<col width="14%" />
+<col width="85%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Output</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>module7c_studyname_runJIVE.html</td>
+<td>Perform JIVE Decomposition for All Features using r.jive</td>
+</tr>
+<tr class="even">
+<td>module7c_studyname_jive_Decomposition.csv</td>
+<td>Joint and individual structure estimates</td>
+</tr>
+<tr class="odd">
+<td>module7c_studyname_jive_predScore.csv</td>
+<td>PCA scores of JIVE ( missing when jive.predict failes)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="input-and-output-of-module-7d" class="section level2">
+<h2>Input and output of Module 7d</h2>
+<ul>
+<li>Main input:
+./data/impu.flag_All_studyname_ENMO.data.flag.epochOuts.csv</li>
+<li>Command = run
+module7d_studyname_calculate_WD_WE_avg_features.Rmd</li>
+<li>Output folder = ./</li>
+</ul>
+<table>
+<colgroup>
+<col width="27%" />
+<col width="72%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Output</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>module7d_studyname_calculate_WD_WE_avg_features.html</td>
+<td>Extract some weekday/weekend specific features from the actigraphy
+data using R</td>
+</tr>
+<tr class="even">
+<td>module7d_studyname_new_features_page1.csv</td>
+<td>Perform JIVE Decomposition for All Features using r.jive</td>
+</tr>
+<tr class="odd">
+<td>module7d_weekday_studyname_all_features_3_subject.csv</td>
+<td>subject level mean of each feature on weekday</td>
+</tr>
+<tr class="even">
+<td>module7d_weekday_studyname_new_features_page4_denseFLMM_day_PCs.csv</td>
+<td>Function PCA at the day level using denseFLMM( ) on weekday</td>
+</tr>
+<tr class="odd">
+<td>module7d_weekday_studyname_new_features_page5_denseFLMM_subject_PCs.csv</td>
+<td>Function PCA at the subject level using denseFLMM( ) on weekday</td>
+</tr>
+<tr class="even">
+<td>module7d_weekend_studyname_all_features_3_subject.csv</td>
+<td>subject level mean of each feature on weekend</td>
+</tr>
+<tr class="odd">
+<td>module7d_weekend_studyname_new_features_page4_denseFLMM_day_PCs.csv</td>
+<td>Function PCA at the day level using denseFLMM( ) on weekend</td>
+</tr>
+<tr class="even">
+<td>module7d_weekend_studyname_new_features_page5_denseFLMM_subject_PCs.csv</td>
+<td>Function PCA at the subject level using denseFLMM( ) on weekend</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="description-of-features-of-domains-of-physical-activity-sleep-and-circadian-rhythmicity" class="section level2">
+<h2>Description of features of domains of physical activity, sleep and
+circadian rhythmicity</h2>
+<p><strong>Sleep Domain</strong></p>
+<table class="table table-striped table-hover" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+Variable
+</th>
+<th style="text-align:left;">
+Description
+</th>
+<th style="text-align:left;">
+level
+</th>
+<th style="text-align:left;">
+Source
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+sleeponset
+</td>
+<td style="text-align:left;">
+Detected onset of sleep expressed as hours since the midnight of the
+previous night.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+wakeup
+</td>
+<td style="text-align:left;">
+Detected waking time (after sleep period) expressed as hours since the
+midnight of the previous night.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+number_sib_wakinghours
+</td>
+<td style="text-align:left;">
+Number of sustained inactivity bouts during the day, with day referring
+to the time outside the Sleep Period Time window.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+SleepDurationInSpt
+</td>
+<td style="text-align:left;">
+Total sleep duration, which equals the accumulated nocturnal sustained
+inactivity bouts within the Sleep Period Time
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sleep_Midpoint
+</td>
+<td style="text-align:left;">
+Sleep Midpoint = (sleeponset + wakeup)/2.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sleep_efficiency
+</td>
+<td style="text-align:left;">
+Sleep Efficiency = SleepDurationInSpt / (wakeup - sleeponset), which was
+the fraction of time spent asleep in the Sleep Period Time window.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+N_atleast5minwakenight
+</td>
+<td style="text-align:left;">
+Number of times awake during the night for at least 5 minutes
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ACC_spt_sleep_mg
+</td>
+<td style="text-align:left;">
+Average acceleration during sleep (mg)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Nblocks_spt_sleep
+</td>
+<td style="text-align:left;">
+Number of blocks of night sleep within the Sleep period time window.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part5
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Physical Activity Domain</strong></p>
+<table class="table table-striped table-hover" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+Variable
+</th>
+<th style="text-align:left;">
+Description
+</th>
+<th style="text-align:left;">
+level
+</th>
+<th style="text-align:left;">
+Source
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+TAC
+</td>
+<td style="text-align:left;">
+Total volume of physical activity in the daytime
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+TLAC
+</td>
+<td style="text-align:left;">
+Total volume of log-transformed physical activity in the daytime
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+TAC_24h
+</td>
+<td style="text-align:left;">
+Total volume of physical activity within 24 hours
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+TLAC_24h
+</td>
+<td style="text-align:left;">
+Total volume of log-transformed physical activity within 24 hours
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sed_dur
+</td>
+<td style="text-align:left;">
+Total daytime duration in minutes of sedentary activity
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+light_dur
+</td>
+<td style="text-align:left;">
+Total daytime duration in minutes of light activity
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mod_dur
+</td>
+<td style="text-align:left;">
+Total daytime duration in minutes of moderate activity
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+vig_dur
+</td>
+<td style="text-align:left;">
+Total daytime duration in minutes of vigorous activity
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+MVPA_dur
+</td>
+<td style="text-align:left;">
+Total daytime duration in minutes of moderate to vigorous activity
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sed_dur_M10
+</td>
+<td style="text-align:left;">
+Total duration in minutes of sedentary activity within M10 window
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+light_dur_M10
+</td>
+<td style="text-align:left;">
+Total duration in minutes of light activity within M10 window
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mod_dur_M10
+</td>
+<td style="text-align:left;">
+Total duration in minutes of moderate activity within M10 window
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+vig_dur_M10
+</td>
+<td style="text-align:left;">
+Total duration in minutes of vigorous activity within M10 window
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+MVPA_dur_M10
+</td>
+<td style="text-align:left;">
+Total duration in minutes of moderate to vigorous activity within M10
+window
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sed_dur_24h
+</td>
+<td style="text-align:left;">
+Total duration in minutes of sedentary activity within 24 hours
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+light_dur_24h
+</td>
+<td style="text-align:left;">
+Total duration in minutes of light activity within 24 hours
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mod_dur_24h
+</td>
+<td style="text-align:left;">
+Total duration in minutes of moderate activity within 24 hours
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+vig_dur_24h
+</td>
+<td style="text-align:left;">
+Total duration in minutes of vigorous activity within 24 hours
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+MVPA_dur_24h
+</td>
+<td style="text-align:left;">
+Total duration in minutes of moderate to vigorous activity within 24
+hours
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sed_dur_C2
+</td>
+<td style="text-align:left;">
+Total daytime duration in minutes of sedentary activity using the second
+cutpoints
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+light_dur_C2
+</td>
+<td style="text-align:left;">
+Total daytime duration in minutes of light activity using the second
+cutpoints
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mod_dur_C2
+</td>
+<td style="text-align:left;">
+Total daytime duration in minutes of moderate activity using the second
+cutpoints
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+vig_dur_C2
+</td>
+<td style="text-align:left;">
+Total daytime duration in minutes of vigorous activity using the second
+cutpoints
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+MVPA_dur_C2
+</td>
+<td style="text-align:left;">
+Total daytime duration in minutes of moderate to vigorous activity using
+the second cutpoints
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sed_dur_M10_C2
+</td>
+<td style="text-align:left;">
+Total duration in minutes of sedentary activity within M10 window using
+the second cutpoints
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+light_dur_M10_C2
+</td>
+<td style="text-align:left;">
+Total duration in minutes of light activity within M10 window using the
+second cutpoints
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mod_dur_M10_C2
+</td>
+<td style="text-align:left;">
+Total duration in minutes of moderate activity within M10 window using
+the second cutpoints
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+vig_dur_M10_C2
+</td>
+<td style="text-align:left;">
+Total duration in minutes of vigorous activity within M10 window using
+the second cutpoints
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+MVPA_dur_M10
+</td>
+<td style="text-align:left;">
+Total duration in minutes of moderate to vigorous activity within M10
+window
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sed_dur_24h_C2
+</td>
+<td style="text-align:left;">
+Total duration in minutes of sedentary activity within 24 hours using
+the second cutpoints
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+light_dur_24h_C2
+</td>
+<td style="text-align:left;">
+Total duration in minutes of light activity within 24 hours using the
+second cutpoints
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mod_dur_24h_C2
+</td>
+<td style="text-align:left;">
+Total duration in minutes of moderate activity within 24 hours using the
+second cutpoints
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+vig_dur_24h_C2
+</td>
+<td style="text-align:left;">
+Total duration in minutes of vigorous activity within 24 hours using the
+second cutpoints
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+MVPA_dur_24h_C2
+</td>
+<td style="text-align:left;">
+Total duration in minutes of moderate to vigorous activity within 24
+hours using the second cutpoints
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mean_r
+</td>
+<td style="text-align:left;">
+Mean sedentary bout duration.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mean_a
+</td>
+<td style="text-align:left;">
+Mean active bout duration.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+SATP
+</td>
+<td style="text-align:left;">
+Sedentary to active transition probabilities.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ASTP
+</td>
+<td style="text-align:left;">
+Active to sedentary transition probabilities.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gini_r
+</td>
+<td style="text-align:left;">
+Gini index for active bout, absolute variability normalized to the
+average bout duration (resting).
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gini_a
+</td>
+<td style="text-align:left;">
+Gini index for sedentary bout, absolute variability normalized to the
+average bout duration (active).
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+alpha_r
+</td>
+<td style="text-align:left;">
+Power law parameter for sedentary bout.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+alpha_a
+</td>
+<td style="text-align:left;">
+Power law parameter for active bout.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+h_r
+</td>
+<td style="text-align:left;">
+Hazard function for sedentary bout.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+h_a
+</td>
+<td style="text-align:left;">
+Hazard function for active bout.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+dur_day_total_IN_min
+</td>
+<td style="text-align:left;">
+Total duration of day in minutes spent in total inactivity during the
+day
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+dur_day_total_LIG_min
+</td>
+<td style="text-align:left;">
+Total duration of day in minutes of light activity during the day
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+dur_day_total_MOD_min
+</td>
+<td style="text-align:left;">
+Total duration of day in minutes of moderate activity during the day
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+dur_day_total_VIG_min
+</td>
+<td style="text-align:left;">
+Total duration of day in minutes of vigorous activity during the day
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+dur_day_MVPA_bts_10_min
+</td>
+<td style="text-align:left;">
+Total duration in minutes of Moderate and Vigorous Physical Activity
+(MVPA) for bouts 10 minutes or more
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+dur_day_MVPA_bts_5_10_min
+</td>
+<td style="text-align:left;">
+Total duration in minutes of Moderate and Vigorous Physical Activity
+(MVPA) for bouts 5 to 10 minutes
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+dur_day_MVPA_bts_1_5_min
+</td>
+<td style="text-align:left;">
+Total duration in minutes of Moderate and Vigorous Physical Activity
+(MVPA) for bouts 1 to 5 minutes
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Nbouts_day_IN_bts_30
+</td>
+<td style="text-align:left;">
+Number of bouts of inactivity for bouts 30 minutes or more
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Nbouts_day_IN_bts_20_30
+</td>
+<td style="text-align:left;">
+Number of bouts of inactivity for bouts 20 to 30 minutes
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Nbouts_day_IN_bts_10_20
+</td>
+<td style="text-align:left;">
+Number of bouts of inactivity for bouts 10 to 20 minutes
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Nbouts_day_LIG_bts_10
+</td>
+<td style="text-align:left;">
+Number of bouts of light for bouts 10 minutes or more
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Nbouts_day_LIG_bts_5_10
+</td>
+<td style="text-align:left;">
+Number of bouts of light for bouts 5 to 10 minutes
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Nbouts_day_LIG_bts_1_5
+</td>
+<td style="text-align:left;">
+Number of bouts of light for bouts 1 to 5 minutes
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Nbouts_day_MVPA_bts_10
+</td>
+<td style="text-align:left;">
+Number of bouts of Moderate and Vigorous Physical Activity (MVPA) for
+bouts 10 minutes or more
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Nbouts_day_MVPA_bts_5_10
+</td>
+<td style="text-align:left;">
+Number of bouts of Moderate and Vigorous Physical Activity (MVPA) for
+bouts 5 to 10 minutes
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Nbouts_day_MVPA_bts_1_5
+</td>
+<td style="text-align:left;">
+Number of bouts of Moderate and Vigorous Physical Activity (MVPA) for
+bouts 1 to 5 minutes
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Nblocks_day_total_IN
+</td>
+<td style="text-align:left;">
+Number of blocks of total inactivity during day
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Nblocks_day_total_LIG
+</td>
+<td style="text-align:left;">
+Number of blocks of total light activity during day
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Nblocks_day_total_MOD
+</td>
+<td style="text-align:left;">
+Number of blocks of total moderate activity during day
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Nblocks_day_total_VIG
+</td>
+<td style="text-align:left;">
+Number of blocks of total vigorous activity during day
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part5
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Circadian Rhythmicity Domain</strong></p>
+<table class="table table-striped table-hover" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+Variable
+</th>
+<th style="text-align:left;">
+Description
+</th>
+<th style="text-align:left;">
+level
+</th>
+<th style="text-align:left;">
+Source
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+L5TIME_num
+</td>
+<td style="text-align:left;">
+Timing of least active 5 hours
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+M10TIME_num
+</td>
+<td style="text-align:left;">
+Timing of most active 10 hours
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+L5VALUE
+</td>
+<td style="text-align:left;">
+Average acceleration value (mg) of least active 5 hours
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+M10VALUE
+</td>
+<td style="text-align:left;">
+Average acceleration value (mg) of most active 10 hours
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+RA_ggir
+</td>
+<td style="text-align:left;">
+Relative amplitude reflects the difference between M10 activity and L5
+activity and RA_ggir = (M10VALUE-L5VALUE)/(M10VALUE+L5VALUE).
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+L5
+</td>
+<td style="text-align:left;">
+Average acceleration value (mg) of least active 5 hours from 0~24 hour
+(midnight to midnight)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+L6
+</td>
+<td style="text-align:left;">
+Average acceleration value (mg) of least active 6 hours from 0~24 hour
+(midnight to midnight)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+L7
+</td>
+<td style="text-align:left;">
+Average acceleration value (mg) of least active 7 hours from 0~24 hour
+(midnight to midnight)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+L8
+</td>
+<td style="text-align:left;">
+Average acceleration value (mg) of least active 8 hours from 0~24 hour
+(midnight to midnight)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+L9
+</td>
+<td style="text-align:left;">
+Average acceleration value (mg) of least active 9 hours from 0~24 hour
+(midnight to midnight)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+L10
+</td>
+<td style="text-align:left;">
+Average acceleration value (mg) of least active 10 hours from 0~24 hour
+(midnight to midnight)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+L5TIME
+</td>
+<td style="text-align:left;">
+Central timing of least active 5 hours from 0~24 hour (midnight to
+midnight)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+L6TIME
+</td>
+<td style="text-align:left;">
+Central timing of least active 6 hours from 0~24 hour (midnight to
+midnight)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+L7TIME
+</td>
+<td style="text-align:left;">
+Central timing of least active 7 hours from 0~24 hour (midnight to
+midnight)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+L8TIME
+</td>
+<td style="text-align:left;">
+Central timing of least active 8 hours from 0~24 hour (midnight to
+midnight)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+L9TIME
+</td>
+<td style="text-align:left;">
+Central timing of least active 9 hours from 0~24 hour (midnight to
+midnight)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+L10TIME
+</td>
+<td style="text-align:left;">
+Central timing of least active 10 hours from 0~24 hour (midnight to
+midnight)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+M5
+</td>
+<td style="text-align:left;">
+Average acceleration value (mg) of most active 5 hours from 0~24 hour
+(midnight to midnight)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+M6
+</td>
+<td style="text-align:left;">
+Average acceleration value (mg) of most active 6 hours from 0~24 hour
+(midnight to midnight)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+M7
+</td>
+<td style="text-align:left;">
+Average acceleration value (mg) of most active 7 hours from 0~24 hour
+(midnight to midnight)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+M8
+</td>
+<td style="text-align:left;">
+Average acceleration value (mg) of most active 8 hours from 0~24 hour
+(midnight to midnight)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+M9
+</td>
+<td style="text-align:left;">
+Average acceleration value (mg) of most active 9 hours from 0~24 hour
+(midnight to midnight)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+M10
+</td>
+<td style="text-align:left;">
+Average acceleration value (mg) of most active 10 hours from 0~24 hour
+(midnight to midnight)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+M5TIME
+</td>
+<td style="text-align:left;">
+Central timing of most active 5 hours from 0~24 hour (midnight to
+midnight)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+M6TIME
+</td>
+<td style="text-align:left;">
+Central timing of most active 6 hours from 0~24 hour (midnight to
+midnight)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+M7TIME
+</td>
+<td style="text-align:left;">
+Central timing of most active 7 hours from 0~24 hour (midnight to
+midnight)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+M8TIME
+</td>
+<td style="text-align:left;">
+Central timing of most active 8 hours from 0~24 hour (midnight to
+midnight)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+M9TIME
+</td>
+<td style="text-align:left;">
+Central timing of most active 9 hours from 0~24 hour (midnight to
+midnight)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+M10TIME
+</td>
+<td style="text-align:left;">
+Central timing of most active 10 hours from 0~24 hour (midnight to
+midnight)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+L5_NN
+</td>
+<td style="text-align:left;">
+Average acceleration value (mg) of least active 5 hours from 12~36 hour
+(noon to noon)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+L6_NN
+</td>
+<td style="text-align:left;">
+Average acceleration value (mg) of least active 6 hours from 12~36 hour
+(noon to noon)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+L7_NN
+</td>
+<td style="text-align:left;">
+Average acceleration value (mg) of least active 7 hours from 12~36 hour
+(noon to noon)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+L8_NN
+</td>
+<td style="text-align:left;">
+Average acceleration value (mg) of least active 8 hours from 12~36 hour
+(noon to noon)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+L9_NN
+</td>
+<td style="text-align:left;">
+Average acceleration value (mg) of least active 9 hours from 12~36 hour
+(noon to noon)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+L10_NN
+</td>
+<td style="text-align:left;">
+Average acceleration value (mg) of least active 10 hours from 12~36 hour
+(noon to noon)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+L5TIME_NN
+</td>
+<td style="text-align:left;">
+Central timing of least active 5 hours from 12~36 hour (noon to noon)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+L6TIME_NN
+</td>
+<td style="text-align:left;">
+Central timing of least active 6 hours from 12~36 hour (noon to noon)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+L7TIME_NN
+</td>
+<td style="text-align:left;">
+Central timing of least active 7 hours from 12~36 hour (noon to noon)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+L8TIME_NN
+</td>
+<td style="text-align:left;">
+Central timing of least active 8 hours from 12~36 hour (noon to noon)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+L9TIME_NN
+</td>
+<td style="text-align:left;">
+Central timing of least active 9 hours from 12~36 hour (noon to noon)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+L10TIME_NN
+</td>
+<td style="text-align:left;">
+Central timing of least active 10 hours from 12~36 hour (noon to noon)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+M5_NN
+</td>
+<td style="text-align:left;">
+Average acceleration value (mg) of most active 5 hours from 12~36 hour
+(noon to noon)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+M6_NN
+</td>
+<td style="text-align:left;">
+Average acceleration value (mg) of most active 6 hours from 12~36 hour
+(noon to noon)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+M7_NN
+</td>
+<td style="text-align:left;">
+Average acceleration value (mg) of most active 7 hours from 12~36 hour
+(noon to noon)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+M8_NN
+</td>
+<td style="text-align:left;">
+Average acceleration value (mg) of most active 8 hours from 12~36 hour
+(noon to noon)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+M9_NN
+</td>
+<td style="text-align:left;">
+Average acceleration value (mg) of most active 9 hours from 12~36 hour
+(noon to noon)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+M10_NN
+</td>
+<td style="text-align:left;">
+Average acceleration value (mg) of most active 10 hours from 12~36 hour
+(noon to noon)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+M5TIME_NN
+</td>
+<td style="text-align:left;">
+Central timing of most active 5 hours from 12~36 hour (noon to noon)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+M6TIME_NN
+</td>
+<td style="text-align:left;">
+Central timing of most active 6 hours from 12~36 hour (noon to noon)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+M7TIME_NN
+</td>
+<td style="text-align:left;">
+Central timing of most active 7 hours from 12~36 hour (noon to noon)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+M8TIME_NN
+</td>
+<td style="text-align:left;">
+Central timing of most active 8 hours from 12~36 hour (noon to noon)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+M9TIME_NN
+</td>
+<td style="text-align:left;">
+Central timing of most active 9 hours from 12~36 hour (noon to noon)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+M10TIME_NN
+</td>
+<td style="text-align:left;">
+Central timing of most active 10 hours from 12~36 hour (noon to noon)
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+RA
+</td>
+<td style="text-align:left;">
+Relative amplitude: (M10-L5)/(M10+L5) where M10= most active 10 hrs, L5
+= least active 5 hour.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+IV
+</td>
+<td style="text-align:left;">
+Intra-daily variability measures fragmentation in the rest/activity
+rhythms.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+IS
+</td>
+<td style="text-align:left;">
+Inter-daily stability measures fragmentation in the rest/activity
+rhythms between different days.
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+IV_intradailyvariability
+</td>
+<td style="text-align:left;">
+Intra-daily variability measures fragmentation in the rest/activity
+rhythms.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+GGIR-part2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+IS_interdailystability
+</td>
+<td style="text-align:left;">
+Inter-daily stability measures fragmentation in the rest/activity
+rhythms between different days.
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+GGIR-part2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mesor
+</td>
+<td style="text-align:left;">
+MESOR which is short for midline statistics of rhythm, which is a rhythm
+adjusted mean. This represents mean activity level.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+amp
+</td>
+<td style="text-align:left;">
+Amplitude, a measure of half the extend of predictable variation within
+a cycle. This represents the highest activity one can achieve.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+acro
+</td>
+<td style="text-align:left;">
+Acrophase, a measure of the time of the overall high values recurring in
+each cycle. Here it has a unit of radian. This represents time to reach
+the peak.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mesor_L
+</td>
+<td style="text-align:left;">
+Mesor in the cosinor model by using log-transformed data.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+amp_L
+</td>
+<td style="text-align:left;">
+Amplitude log-transformed in the cosinor model by using log-transformed
+data.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+acro_L
+</td>
+<td style="text-align:left;">
+Acrophase log-transformed in the cosinor model by using log-transformed
+data.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+minimum_ext
+</td>
+<td style="text-align:left;">
+Minimum value of the of the function from extended cosinor model.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+amp_ext
+</td>
+<td style="text-align:left;">
+Amplitude, a measure of half the extend of predictable variation within
+a cycle from extended cosinor model. This represents the highest
+activity one can achieve.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+alpha_ext
+</td>
+<td style="text-align:left;">
+It determines whether the peaks of the curve are wider than the troughs:
+when alpha is small, the troughs are narrow and the peaks are wide; when
+alpha is large, the troughs are wide and the peaks are narrow from
+extended cosinor model.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+beta_ext
+</td>
+<td style="text-align:left;">
+It dertermines whether the transformed function rises and falls more
+steeply than the cosine curve: large values of beta produce curves that
+are nearly square waves from extended cosinor model.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+acrotime_ext
+</td>
+<td style="text-align:left;">
+Acrophase is the time of day of the peak in the unit of the time (hours)
+from extended cosinor model.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+F_pseudo_ext
+</td>
+<td style="text-align:left;">
+Measure the improvement of the fit obtained by the non-linear estimation
+of the transformed extended cosine model.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+UpMesor_ext
+</td>
+<td style="text-align:left;">
+Time of day of switch from low to high activity from extended cosinor
+model. Represents the timing of the rest- activity rhythm from extended
+cosinor model. Lower (earlier) values indicate increase in activity
+earlier in the day and suggest a more advanced circadian phase from
+extended cosinor model.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+DownMesor_ext
+</td>
+<td style="text-align:left;">
+Time of day of switch from high to low activity from extended cosinor
+model. Represents the timing of the rest-activity rhythm from extended
+cosinor model. Lower (earlier) values indicate decline in activity
+earlier in the day, suggesting a more advanced circadian phase from
+extended cosinor model.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+MESOR_ext
+</td>
+<td style="text-align:left;">
+A measure analogous to the MESOR of the cosine model (or half the
+deflection of the curve) can be obtained from mes=min+amp/2 from
+extended cosinor model. However, it goes through the middle of the peak,
+and is therefore not equal to the MESOR of the cosine model, which is
+the mean of the data from extended cosinor model.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+minimum_ext_L
+</td>
+<td style="text-align:left;">
+Minimum value of the of the function from extended cosinor model by
+using log-transformed data.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+amp_ext_L
+</td>
+<td style="text-align:left;">
+Amplitude, a measure of half the extend of predictable variation within
+a cycle from extended cosinor model by using log-transformed data. This
+represents the highest activity one can achieve.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+alpha_ext_L
+</td>
+<td style="text-align:left;">
+It determines whether the peaks of the curve are wider than the troughs:
+when alpha is small, the troughs are narrow and the peaks are wide; when
+alpha is large, the troughs are wide and the peaks are narrow from
+extended cosinor model by using log-transformed data.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+beta_ext_L
+</td>
+<td style="text-align:left;">
+It dertermines whether the transformed function rises and falls more
+steeply than the cosine curve: large values of beta produce curves that
+are nearly square waves from extended cosinor model by using
+log-transformed data.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+acrotime_ext_L
+</td>
+<td style="text-align:left;">
+Acrophase is the time of day of the peak in the unit of the time (hours)
+from extended cosinor model by using log-transformed data.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+F_pseudo_ext_L
+</td>
+<td style="text-align:left;">
+Measure the improvement of the fit obtained by the non-linear estimation
+of the transformed extended cosine model by using log-transformed data.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+UpMesor_ext_L
+</td>
+<td style="text-align:left;">
+Time of day of switch from low to high activity from extended cosinor
+model. Represents the timing of the rest- activity rhythm from extended
+cosinor model. Lower (earlier) values indicate increase in activity
+earlier in the day and suggest a more advanced circadian phase from
+extended cosinor model by using log-transformed data.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+DownMesor_ext_L
+</td>
+<td style="text-align:left;">
+Time of day of switch from high to low activity from extended cosinor
+model. Represents the timing of the rest-activity rhythm from extended
+cosinor model. Lower (earlier) values indicate decline in activity
+earlier in the day, suggesting a more advanced circadian phase from
+extended cosinor model by using log-transformed data.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+MESOR_ext_L
+</td>
+<td style="text-align:left;">
+A measure analogous to the MESOR of the cosine model (or half the
+deflection of the curve) can be obtained from mes=min+amp/2 from
+extended cosinor model. However, it goes through the middle of the peak,
+and is therefore not equal to the MESOR of the cosine model, which is
+the mean of the data from extended cosinor model by using
+log-transformed data.
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PC1
+</td>
+<td style="text-align:left;">
+1st principal component score from day-level functional principal
+component analysis (FPCA).
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PC2
+</td>
+<td style="text-align:left;">
+2nd principal component score from day-level functional principal
+component analysis (FPCA).
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PC3
+</td>
+<td style="text-align:left;">
+3rd principal component score from day-level functional principal
+component analysis (FPCA).
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PC4
+</td>
+<td style="text-align:left;">
+4th principal component score from day-level functional principal
+component analysis (FPCA).
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PC5
+</td>
+<td style="text-align:left;">
+5th principal component score from day-level functional principal
+component analysis (FPCA).
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PC6
+</td>
+<td style="text-align:left;">
+6th principal component score from day-level functional principal
+component analysis (FPCA).
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PC7
+</td>
+<td style="text-align:left;">
+7th principal component score from day-level functional principal
+component analysis (FPCA).
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PC8
+</td>
+<td style="text-align:left;">
+8th principal component score from day-level functional principal
+component analysis (FPCA).
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PC9
+</td>
+<td style="text-align:left;">
+9th principal component score from day-level functional principal
+component analysis (FPCA).
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PC10
+</td>
+<td style="text-align:left;">
+10th principal component score from day-level functional principal
+component analysis (FPCA).
+</td>
+<td style="text-align:left;">
+day
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mesor_S
+</td>
+<td style="text-align:left;">
+Apply coninor model using subject level data. MESOR which is short for
+midline statistics of rhythm, which is a rhythm adjusted mean. This
+represents mean activity level.
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+amp_S
+</td>
+<td style="text-align:left;">
+Apply coninor model using subject level data. Amplitude, a measure of
+half the extend of predictable variation within a cycle. This represents
+the highest activity one can achieve using subject level data.
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+acro_S
+</td>
+<td style="text-align:left;">
+Apply coninor model using subject level data. Acrophase, a measure of
+the time of the overall high values recurring in each cycle. Here it has
+a unit of radian. This represents time to reach the peak.
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mesor_L_S
+</td>
+<td style="text-align:left;">
+Apply coninor model using subject level data. Mesor in the cosinor model
+by using log-transformed data.
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+amp_L_S
+</td>
+<td style="text-align:left;">
+Apply coninor model using subject level data. Amplitude log-transformed
+in the cosinor model by using log-transformed data.
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+acro_L_S
+</td>
+<td style="text-align:left;">
+Apply coninor model using subject level data. Acrophase log-transformed
+in the cosinor model by using log-transformed data.
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+minimum_ext_S
+</td>
+<td style="text-align:left;">
+Apply extended coninor model using subject level data. Minimum value of
+the of the function from extended cosinor model.
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+amp_ext_S
+</td>
+<td style="text-align:left;">
+Apply extended coninor model using subject level data. Amplitude, a
+measure of half the extend of predictable variation within a cycle from
+extended cosinor model. This represents the highest activity one can
+achieve.
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+alpha_ext_S
+</td>
+<td style="text-align:left;">
+Apply extended coninor model using subject level data. It determines
+whether the peaks of the curve are wider than the troughs: when alpha is
+small, the troughs are narrow and the peaks are wide; when alpha is
+large, the troughs are wide and the peaks are narrow from extended
+cosinor model.
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+beta_ext_S
+</td>
+<td style="text-align:left;">
+Apply extended coninor model using subject level data. It dertermines
+whether the transformed function rises and falls more steeply than the
+cosine curve: large values of beta produce curves that are nearly square
+waves from extended cosinor model.
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+acrotime_ext_S
+</td>
+<td style="text-align:left;">
+Apply extended coninor model using subject level data. Acrophase is the
+time of day of the peak in the unit of the time (hours) from extended
+cosinor model.
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+F_pseudo_ext_S
+</td>
+<td style="text-align:left;">
+Apply extended coninor model using subject level data. Measure the
+improvement of the fit obtained by the non-linear estimation of the
+transformed extended cosine model.
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+UpMesor_ext_S
+</td>
+<td style="text-align:left;">
+Apply extended coninor model using subject level data. Time of day of
+switch from low to high activity from extended cosinor model. Represents
+the timing of the rest- activity rhythm from extended cosinor model.
+Lower (earlier) values indicate increase in activity earlier in the day
+and suggest a more advanced circadian phase from extended cosinor model.
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+DownMesor_ext_S
+</td>
+<td style="text-align:left;">
+Apply extended coninor model using subject level data. Time of day of
+switch from high to low activity from extended cosinor model. Represents
+the timing of the rest-activity rhythm from extended cosinor model.
+Lower (earlier) values indicate decline in activity earlier in the day,
+suggesting a more advanced circadian phase from extended cosinor model.
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+MESOR_ext_S
+</td>
+<td style="text-align:left;">
+A measure analogous to the MESOR of the cosine model (or half the
+deflection of the curve) can be obtained from mes=min+amp/2 from
+extended cosinor model. However, it goes through the middle of the peak,
+and is therefore not equal to the MESOR of the cosine model, which is
+the mean of the data from extended cosinor model.
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+minimum_ext_L_S
+</td>
+<td style="text-align:left;">
+Apply extended coninor model using subject level data. Minimum value of
+the of the function from extended cosinor model by using log-transformed
+data.
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+amp_ext_L_S
+</td>
+<td style="text-align:left;">
+Apply extended coninor model using subject level data. amplitude, a
+measure of half the extend of predictable variation within a cycle from
+extended cosinor model by using log-transformed data. This represents
+the highest activity one can achieve.
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+alpha_ext_L_S
+</td>
+<td style="text-align:left;">
+Apply extended coninor model using subject level data. It determines
+whether the peaks of the curve are wider than the troughs: when alpha is
+small, the troughs are narrow and the peaks are wide; when alpha is
+large, the troughs are wide and the peaks are narrow from extended
+cosinor model by using log-transformed data.
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+beta_ext_L_S
+</td>
+<td style="text-align:left;">
+Apply extended coninor model using subject level data. It dertermines
+whether the transformed function rises and falls more steeply than the
+cosine curve: large values of beta produce curves that are nearly square
+waves from extended cosinor model by using log-transformed data.
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+acrotime_ext_L_S
+</td>
+<td style="text-align:left;">
+Apply extended coninor model using subject level data. Acrophase is the
+time of day of the peak in the unit of the time (hours) from extended
+cosinor model by using log-transformed data.
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+F_pseudo_ext_L_S
+</td>
+<td style="text-align:left;">
+Apply extended coninor model using subject level data. Measure the
+improvement of the fit obtained by the non-linear estimation of the
+transformed extended cosine model by using log-transformed data.
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+UpMesor_ext_L_S
+</td>
+<td style="text-align:left;">
+Apply extended coninor model using subject level data. Time of day of
+switch from low to high activity from extended cosinor model. Represents
+the timing of the rest- activity rhythm from extended cosinor model.
+Lower (earlier) values indicate increase in activity earlier in the day
+and suggest a more advanced circadian phase from extended cosinor model
+by using log-transformed data.
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+DownMesor_ext_L_S
+</td>
+<td style="text-align:left;">
+Apply extended coninor model using subject level data. Time of day of
+switch from high to low activity from extended cosinor model. Represents
+the timing of the rest-activity rhythm from extended cosinor model.
+Lower (earlier) values indicate decline in activity earlier in the day,
+suggesting a more advanced circadian phase from extended cosinor model
+by using log-transformed data.
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+MESOR_ext_L_S
+</td>
+<td style="text-align:left;">
+Apply extended coninor model using subject level data. A measure
+analogous to the MESOR of the cosine model (or half the deflection of
+the curve) can be obtained from mes=min+amp/2 from extended cosinor
+model. However, it goes through the middle of the peak, and is therefore
+not equal to the MESOR of the cosine model, which is the mean of the
+data from extended cosinor model by using log-transformed data.
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PC1_S
+</td>
+<td style="text-align:left;">
+1st principal component score from subject-level functional principal
+component analysis (FPCA).
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PC2_S
+</td>
+<td style="text-align:left;">
+2nd principal component score from subject-level functional principal
+component analysis (FPCA).
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PC3_S
+</td>
+<td style="text-align:left;">
+3rd principal component score from subject-level functional principal
+component analysis (FPCA).
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PC4_S
+</td>
+<td style="text-align:left;">
+4th principal component score from subject-level functional principal
+component analysis (FPCA).
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PC5_S
+</td>
+<td style="text-align:left;">
+5th principal component score from subject-level functional principal
+component analysis (FPCA).
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PC6_S
+</td>
+<td style="text-align:left;">
+6th principal component score from subject-level functional principal
+component analysis (FPCA).
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PC7_S
+</td>
+<td style="text-align:left;">
+7th principal component score from subject-level functional principal
+component analysis (FPCA).
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PC8_S
+</td>
+<td style="text-align:left;">
+8th principal component score from subject-level functional principal
+component analysis (FPCA).
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PC9_S
+</td>
+<td style="text-align:left;">
+9th principal component score from subject-level functional principal
+component analysis (FPCA).
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PC10_S
+</td>
+<td style="text-align:left;">
+10th principal component score from subject-level functional principal
+component analysis (FPCA).
+</td>
+<td style="text-align:left;">
+subject
+</td>
+<td style="text-align:left;">
+mMARCH.AC
+</td>
+</tr>
+</tbody>
+</table>
+<p>Note<br />
+(1) The column of level indicates the feature was calculated as subject
+level or day level.<br />
+(2) The column of source indicates the feature source. R indiciates the
+feature was calculated based on activity data. Part2, part4 and part5 in
+‘Source’ column indicate the feature was extracted from summary results
+from GGIR outputs.</p>
+</div>
+</div>
+<div id="citing-mmarch.ac" class="section level1">
+<h1>Citing mMARCH.AC</h1>
+<ul>
+<li>Guo W., Leroux A., Shou S., Cui L., Kang S., Strippoli M.P., Preisig
+M., Zipunnikov V., Merikangas K. (2022) Processing of accelerometry data
+with GGIR in Motor Activity Research Consortium for Health (mMARCH).
+(Manuscript)</li>
+</ul>
+</div>
+<div id="reference" class="section level1">
+<h1>Reference</h1>
+<ul>
+<li><p>Di J., Spira A., Bai J., Urbanek J., Leroux A., Wu M., …,
+Zipunnikov V. (2019). Joint and individual representation of domains of
+physical activity, sleep, and circadian rhythmicity. Statistics in
+Biosciences, 11(2), 371-402. <a href="doi:10.1007/s12561-019-09236-4" class="uri">doi:10.1007/s12561-019-09236-4</a></p></li>
+<li><p>Lock E.F., Hoadley K.A., Marron J.S., Nobel A.B. (2013). Joint
+and individual variation explained (JIVE) for integrated analysis of
+multiple data types. Ann Appl Stat 7(1), 523-542. <a href="https://doi.org/10.1214/12-AOAS597" class="uri">https://doi.org/10.1214/12-AOAS597</a></p></li>
+<li><p>O’Connell M.J., Lock E.F. (2016). R.JIVE for exploration of
+multi-source molecular data. Bioinformatics, 32(18), 2877-2879.</p></li>
+</ul>
+</div>
+<div id="websites" class="section level1">
+<h1>Websites</h1>
+<ul>
+<li><p>mMARCH.AC download: <a href="https://cran.r-project.org/package=mMARCH.AC" class="uri">https://cran.r-project.org/package=mMARCH.AC</a></p></li>
+<li><p>mMARCH.AC vignette: <a href="https://cran.r-project.org/package=mMARCH.AC" class="uri">https://cran.r-project.org/package=mMARCH.AC</a></p></li>
+<li><p>Example data and documents: <a href="https://github.com/WeiGuoNIMH/mMARCH.AC" class="uri">https://github.com/WeiGuoNIMH/mMARCH.AC</a></p></li>
+</ul>
+<p>Please contact <a href="mailto:wei.guo3@nih.gov" class="email">wei.guo3@nih.gov</a> to ask questions.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
